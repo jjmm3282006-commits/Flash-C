@@ -1422,11 +1422,21 @@
     renderEditTagTabs();
     
     // Show modal
-    document.getElementById('editModal').classList.add('active');
+    const modal = document.getElementById('editModal');
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeEditModal();
+      }
+    };
   }
 
   function closeEditModal() {
-    document.getElementById('editModal').classList.remove('active');
+    const modal = document.getElementById('editModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
     document.getElementById('newEditTagInput').style.display = 'none';
     editingCardId = null;
     editSelectedTags = [];
@@ -1917,6 +1927,7 @@
         modal.classList.remove('active');
         cancelBtn.removeEventListener('click', onCancel);
         okBtn.removeEventListener('click', onOk);
+        modal.removeEventListener('click', onBackdropClick);
       };
       
       const onCancel = () => {
@@ -1929,8 +1940,16 @@
         resolve(true);
       };
       
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve(false);
+        }
+      };
+      
       cancelBtn.addEventListener('click', onCancel);
       okBtn.addEventListener('click', onOk);
+      modal.addEventListener('click', onBackdropClick);
     });
   }
 
