@@ -797,6 +797,26 @@
     color: var(--accent);
   }
 
+  .tag-action-btn {
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .tag-action-btn:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+  }
+
   .new-tag-input {
     display: flex;
     gap: 8px;
@@ -1004,6 +1024,7 @@
         <div class="tag-tabs-wrapper">
           <div class="tag-tabs" id="tagTabs"></div>
         </div>
+        <button class="tag-action-btn" id="deselectAllBtn" onclick="deselectAllTags()" style="display:none;">Deselect All</button>
         <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()">+</button>
       </div>
       <div class="new-tag-input" id="newTagInput" style="display:none">
@@ -1139,6 +1160,7 @@
             <div class="tag-tabs-wrapper">
               <div class="tag-tabs" id="editTagTabs"></div>
             </div>
+            <button class="tag-action-btn" id="editDeselectAllBtn" onclick="deselectAllEditTags()" style="display:none;">Deselect All</button>
             <button class="tag-add-btn" onclick="showNewEditTagInput()">+</button>
           </div>
           <div class="new-tag-input" id="newEditTagInput" style="display:none">
@@ -1362,6 +1384,7 @@
   function renderTagTabs() {
     const allTags = getAllTags();
     const tagTabs = document.getElementById('tagTabs');
+    const deselectAllBtn = document.getElementById('deselectAllBtn');
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
@@ -1370,6 +1393,13 @@
         const isSelected = selectedTags.includes(tag);
         return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
       }).join('');
+    }
+    
+    // Show/hide deselect all button based on selection
+    if (selectedTags.length > 0) {
+      deselectAllBtn.style.display = 'block';
+    } else {
+      deselectAllBtn.style.display = 'none';
     }
     
     // Trigger scroll check after rendering
@@ -1381,6 +1411,11 @@
         wrapper.classList.remove('has-scroll');
       }
     }, 50);
+  }
+
+  function deselectAllTags() {
+    selectedTags = [];
+    renderTagTabs();
   }
 
   async function removeTag(tag) {
@@ -1508,6 +1543,7 @@
   function renderEditTagTabs() {
     const allTags = getAllTags();
     const tagTabs = document.getElementById('editTagTabs');
+    const deselectAllBtn = document.getElementById('editDeselectAllBtn');
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
@@ -1516,6 +1552,13 @@
         const isSelected = editSelectedTags.includes(tag);
         return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
       }).join('');
+    }
+    
+    // Show/hide deselect all button based on selection
+    if (editSelectedTags.length > 0) {
+      deselectAllBtn.style.display = 'block';
+    } else {
+      deselectAllBtn.style.display = 'none';
     }
     
     // Trigger scroll check after rendering
@@ -1527,6 +1570,11 @@
         wrapper.classList.remove('has-scroll');
       }
     }, 50);
+  }
+
+  function deselectAllEditTags() {
+    editSelectedTags = [];
+    renderEditTagTabs();
   }
 
   function toggleEditTag(tag) {
