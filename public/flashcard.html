@@ -49,6 +49,44 @@
     line-height: 1.6;
   }
 
+  /* Global minimal scrollbar - light mode */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.15);
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.25);
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .dark ::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.15) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.15) transparent;
+  }
+
   /* Header */
   header {
     position: sticky;
@@ -290,6 +328,8 @@
     font-size: 17px; 
     margin-bottom: 6px;
     color: var(--text);
+    word-break: break-word;
+    overflow-wrap: break-word;
   }
 
   .deck-count { 
@@ -311,31 +351,36 @@
     justify-content: space-between;
     gap: 16px;
     transition: all 0.2s;
-    word-wrap: break-word;
-    overflow-wrap: break-word;
+    overflow: hidden;
   }
 
   .flashcard-item:hover {
     box-shadow: var(--shadow-md);
   }
 
-  .flashcard-content { flex: 1; }
+  .flashcard-content { 
+    flex: 1; 
+    min-width: 0;
+    overflow: hidden;
+  }
 
   .flashcard-front {
     font-weight: 600;
     font-size: 15px;
     margin-bottom: 6px;
     color: var(--accent);
-    word-wrap: break-word;
+    word-break: break-word;
     overflow-wrap: break-word;
+    white-space: pre-wrap;
     line-height: 1.5;
   }
 
   .flashcard-back {
     font-size: 14px;
     color: var(--text2);
-    word-wrap: break-word;
+    word-break: break-word;
     overflow-wrap: break-word;
+    white-space: pre-wrap;
     line-height: 1.5;
   }
 
@@ -365,7 +410,6 @@
   /* Study Mode - 3D Flip Card */
   .study-card-container {
     perspective: 1000px;
-    min-height: 280px;
     margin: 28px 0;
     cursor: pointer;
   }
@@ -373,7 +417,6 @@
   .study-card-inner {
     position: relative;
     width: 100%;
-    min-height: 280px;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
   }
@@ -398,7 +441,7 @@
     padding: 32px;
     text-align: center;
     box-shadow: var(--shadow-lg);
-    overflow-y: auto;
+    overflow: hidden;
   }
 
   .study-card-front {
@@ -413,13 +456,41 @@
   }
 
   .study-card-text {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 600;
     line-height: 1.5;
-    word-wrap: break-word;
+    word-break: break-word;
     overflow-wrap: break-word;
-    max-width: 100%;
+    white-space: pre-wrap;
+    width: 100%;
+    max-height: 60vh;
     overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+  }
+
+  /* Minimal themed scrollbar inside cards */
+  .study-card-text::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .study-card-text::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .study-card-text::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.35);
+    border-radius: 2px;
+  }
+
+  .study-card-text::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.55);
+  }
+
+  /* Firefox scrollbar */
+  .study-card-text {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
   }
 
   .study-hint {
@@ -520,10 +591,11 @@
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
-    .study-card-text { font-size: 20px; }
-    .study-card-face { padding: 24px; }
+    .study-card-text { font-size: 18px; }
+    .study-card-face { padding: 24px 20px; }
     .page-title { font-size: 26px; }
     main { padding: 24px 16px; }
+    .form-row { flex-direction: column; }
   }
 
   /* iOS fix */
@@ -963,22 +1035,31 @@
     const front = document.querySelector('.study-card-front');
     const back = document.querySelector('.study-card-back');
     const container = document.getElementById('studyCardInner');
+    const containerEl = document.querySelector('.study-card-container');
     
-    // Temporarily make both visible to measure
+    // Temporarily make both faces visible to measure their natural heights
     front.style.position = 'relative';
     back.style.position = 'relative';
     back.style.transform = 'none';
+    front.style.height = 'auto';
+    back.style.height = 'auto';
     
     const frontHeight = front.scrollHeight;
     const backHeight = back.scrollHeight;
-    const maxHeight = Math.max(frontHeight, backHeight, 280);
+    
+    // Use the taller one, with a minimum of 280px
+    const targetHeight = Math.max(frontHeight, backHeight, 280);
     
     // Reset styles
     front.style.position = '';
     back.style.position = '';
     back.style.transform = '';
+    front.style.height = '';
+    back.style.height = '';
     
-    container.style.height = maxHeight + 'px';
+    // Set container height
+    container.style.height = targetHeight + 'px';
+    containerEl.style.height = targetHeight + 'px';
   }
 
   function flipCard() {
