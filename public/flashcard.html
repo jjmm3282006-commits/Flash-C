@@ -694,19 +694,43 @@
     gap: 8px;
     margin-bottom: 16px;
     padding: 0 4px;
+    position: relative;
+  }
+
+  .tag-tabs-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
   }
 
   .tag-tabs {
     display: flex;
     gap: 2px;
-    flex: 1;
     overflow-x: auto;
     scrollbar-width: none;
     padding-bottom: 2px;
+    scroll-behavior: smooth;
   }
 
   .tag-tabs::-webkit-scrollbar {
     display: none;
+  }
+
+  .tag-tabs-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg2));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tag-tabs-wrapper.has-scroll::after {
+    opacity: 1;
   }
 
   .tag-tab {
@@ -977,7 +1001,9 @@
       
       <!-- Tag Tabs -->
       <div class="tag-tabs-container">
-        <div class="tag-tabs" id="tagTabs"></div>
+        <div class="tag-tabs-wrapper">
+          <div class="tag-tabs" id="tagTabs"></div>
+        </div>
         <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()">+</button>
       </div>
       <div class="new-tag-input" id="newTagInput" style="display:none">
@@ -1110,7 +1136,9 @@
         <div class="edit-tags-section">
           <label>Tags:</label>
           <div class="edit-tag-tabs-container">
-            <div class="tag-tabs" id="editTagTabs"></div>
+            <div class="tag-tabs-wrapper">
+              <div class="tag-tabs" id="editTagTabs"></div>
+            </div>
             <button class="tag-add-btn" onclick="showNewEditTagInput()">+</button>
           </div>
           <div class="new-tag-input" id="newEditTagInput" style="display:none">
@@ -1337,13 +1365,22 @@
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
-      return;
+    } else {
+      tagTabs.innerHTML = allTags.map(tag => {
+        const isSelected = selectedTags.includes(tag);
+        return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
+      }).join('');
     }
-
-    tagTabs.innerHTML = allTags.map(tag => {
-      const isSelected = selectedTags.includes(tag);
-      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
-    }).join('');
+    
+    // Trigger scroll check after rendering
+    setTimeout(() => {
+      const wrapper = tagTabs.parentElement;
+      if (tagTabs.scrollWidth > tagTabs.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }, 50);
   }
 
   async function removeTag(tag) {
@@ -1474,13 +1511,22 @@
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
-      return;
+    } else {
+      tagTabs.innerHTML = allTags.map(tag => {
+        const isSelected = editSelectedTags.includes(tag);
+        return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
+      }).join('');
     }
-
-    tagTabs.innerHTML = allTags.map(tag => {
-      const isSelected = editSelectedTags.includes(tag);
-      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
-    }).join('');
+    
+    // Trigger scroll check after rendering
+    setTimeout(() => {
+      const wrapper = tagTabs.parentElement;
+      if (tagTabs.scrollWidth > tagTabs.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }, 50);
   }
 
   function toggleEditTag(tag) {
@@ -2081,6 +2127,87 @@
       hideNewEditTagInput();
     }
   });
+
+  // Horizontal scroll for tag tabs
+  function enableHorizontalScroll(element) {
+    element.addEventListener('wheel', function(e) {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        element.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    // Check if there's scrollable content
+    function checkScroll() {
+      const wrapper = element.parentElement;
+      if (element.scrollWidth > element.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }
+
+    // Check on scroll and resize
+    element.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+    
+    // Initial check
+    setTimeout(checkScroll, 100);
+  }
+
+  // Enable horizontal scroll on both tag containers
+  const tagTabsContainer = document.getElementById('tagTabs');
+  const editTagTabsContainer = document.getElementById('editTagTabs');
+  
+  if (tagTabsContainer) {
+    enableHorizontalScroll(tagTabsContainer);
+  }
+  
+  if (editTagTabsContainer) {
+    enableHorizontalScroll(editTagTabsContainer);
+  }
+
+  // Touch support for horizontal scroll
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  function enableTouchScroll(element) {
+    element.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startX = e.pageX - element.offsetLeft;
+      scrollLeft = element.scrollLeft;
+      element.style.cursor = 'grabbing';
+    });
+
+    element.addEventListener('mouseleave', () => {
+      isDown = false;
+      element.style.cursor = 'grab';
+    });
+
+    element.addEventListener('mouseup', () => {
+      isDown = false;
+      element.style.cursor = 'grab';
+    });
+
+    element.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - element.offsetLeft;
+      const walk = (x - startX) * 2;
+      element.scrollLeft = scrollLeft - walk;
+    });
+
+    element.style.cursor = 'grab';
+  }
+
+  if (tagTabsContainer) {
+    enableTouchScroll(tagTabsContainer);
+  }
+  
+  if (editTagTabsContainer) {
+    enableTouchScroll(editTagTabsContainer);
+  }
 
   // Close modal on Escape key
   document.addEventListener('keydown', function(e) {
