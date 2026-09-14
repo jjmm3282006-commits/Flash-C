@@ -727,10 +727,14 @@
     margin-left: 6px;
     opacity: 0.6;
     font-size: 14px;
+    cursor: pointer;
+    padding: 0 2px;
+    line-height: 1;
   }
 
   .tag-tab .tag-remove:hover {
     opacity: 1;
+    color: #e53e3e;
   }
 
   .tag-add-btn {
@@ -1136,8 +1140,39 @@
 
     tagTabs.innerHTML = allTags.map(tag => {
       const isSelected = selectedTags.includes(tag);
-      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
+      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
     }).join('');
+  }
+
+  function removeTag(tag) {
+    // Remove from pending tags
+    const pendingIndex = pendingTags.indexOf(tag);
+    if (pendingIndex !== -1) {
+      pendingTags.splice(pendingIndex, 1);
+    }
+    
+    // Remove from selected tags
+    const selectedIndex = selectedTags.indexOf(tag);
+    if (selectedIndex !== -1) {
+      selectedTags.splice(selectedIndex, 1);
+    }
+    
+    // Remove from all cards
+    const deck = getCurrentDeck();
+    if (deck) {
+      deck.cards.forEach(card => {
+        if (card.tags) {
+          const tagIndex = card.tags.indexOf(tag);
+          if (tagIndex !== -1) {
+            card.tags.splice(tagIndex, 1);
+          }
+        }
+      });
+      save();
+    }
+    
+    renderTagTabs();
+    renderCards();
   }
 
   function toggleTag(tag) {
