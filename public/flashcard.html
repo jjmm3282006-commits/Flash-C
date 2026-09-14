@@ -677,6 +677,104 @@
     background: var(--text3);
   }
 
+  /* Tag Tabs */
+  .tag-tabs-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 2px;
+    margin-bottom: 16px;
+    padding: 0 4px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  .tag-tabs-container::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag-tabs {
+    display: flex;
+    gap: 2px;
+    flex: 1;
+  }
+
+  .tag-tab {
+    padding: 8px 16px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .tag-tab:hover {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .tag-tab.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .tag-tab .tag-remove {
+    margin-left: 6px;
+    opacity: 0.6;
+    font-size: 14px;
+  }
+
+  .tag-tab .tag-remove:hover {
+    opacity: 1;
+  }
+
+  .tag-add-btn {
+    padding: 8px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 8px 8px 0 0;
+    font-size: 16px;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+
+  .tag-add-btn:hover {
+    background: var(--bg2);
+    color: var(--accent);
+  }
+
+  .new-tag-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 12px;
+    background: var(--bg3);
+    border-radius: 8px;
+  }
+
+  .new-tag-input input {
+    flex: 1;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+  }
+
+  .new-tag-input input:focus {
+    border-color: var(--accent);
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
@@ -735,10 +833,21 @@
 
     <div class="card">
       <div class="card-label">Add New Card</div>
+      
+      <!-- Tag Tabs -->
+      <div class="tag-tabs-container">
+        <div class="tag-tabs" id="tagTabs"></div>
+        <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()">+</button>
+      </div>
+      <div class="new-tag-input" id="newTagInput" style="display:none">
+        <input type="text" id="newTagText" placeholder="Enter tag name..." autocomplete="off">
+        <button class="btn btn-primary" style="padding:8px 16px; font-size:13px;" onclick="addNewTag()">Add</button>
+        <button class="btn btn-ghost" style="padding:8px 16px; font-size:13px;" onclick="hideNewTagInput()">Cancel</button>
+      </div>
+      
       <form class="form-stack" onsubmit="addCard(event)">
         <input type="text" id="cardFront" placeholder="Front (question or term)..." autocomplete="off">
         <input type="text" id="cardBack" placeholder="Back (answer or definition)..." autocomplete="off">
-        <input type="text" id="cardTags" placeholder="Tags (optional, comma-separated: math, chapter1)..." autocomplete="off">
         <button type="submit" class="btn btn-primary btn-full">Add Card</button>
       </form>
     </div>
@@ -843,6 +952,8 @@
   let currentFilter = 'all';
   let currentTagFilter = '';
   let studyCards = []; // Filtered cards for study mode
+  let selectedTags = []; // Tags selected for the current card being added
+  let pendingTags = []; // Tags created but not yet used in any card
 
   // Init
   function init() {
@@ -926,6 +1037,8 @@
     currentDeckId = id;
     currentFilter = 'all';
     currentTagFilter = '';
+    selectedTags = [];
+    pendingTags = [];
     renderCards();
     showView('cardsView');
   }
@@ -975,26 +1088,94 @@
     e.preventDefault();
     const front = document.getElementById('cardFront').value.trim();
     const back = document.getElementById('cardBack').value.trim();
-    const tagsInput = document.getElementById('cardTags').value.trim();
     if (!front || !back) return;
-
-    // Parse tags
-    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
 
     const deck = getCurrentDeck();
     deck.cards.push({
       id: Date.now().toString(),
       front: front,
       back: back,
-      tags: tags,
+      tags: [...selectedTags],
       learned: false
     });
     save();
     document.getElementById('cardFront').value = '';
     document.getElementById('cardBack').value = '';
-    document.getElementById('cardTags').value = '';
     document.getElementById('cardFront').focus();
+    // Keep selected tags for next card
     renderCards();
+  }
+
+  // Tag Tabs Functions
+  function getAllTags() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    const tags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => tags.add(tag));
+      }
+    });
+    // Include pending tags
+    pendingTags.forEach(tag => tags.add(tag));
+    return Array.from(tags).sort();
+  }
+
+  function renderTagTabs() {
+    const allTags = getAllTags();
+    const tagTabs = document.getElementById('tagTabs');
+    
+    if (allTags.length === 0) {
+      tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
+      return;
+    }
+
+    tagTabs.innerHTML = allTags.map(tag => {
+      const isSelected = selectedTags.includes(tag);
+      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
+    }).join('');
+  }
+
+  function toggleTag(tag) {
+    const index = selectedTags.indexOf(tag);
+    if (index === -1) {
+      selectedTags.push(tag);
+    } else {
+      selectedTags.splice(index, 1);
+    }
+    renderTagTabs();
+  }
+
+  function showNewTagInput() {
+    document.getElementById('newTagInput').style.display = 'flex';
+    document.getElementById('newTagText').focus();
+  }
+
+  function hideNewTagInput() {
+    document.getElementById('newTagInput').style.display = 'none';
+    document.getElementById('newTagText').value = '';
+  }
+
+  function addNewTag() {
+    const input = document.getElementById('newTagText');
+    const tagName = input.value.trim();
+    
+    if (!tagName) return;
+    
+    // Check if tag already exists
+    const allTags = getAllTags();
+    if (!allTags.includes(tagName)) {
+      // New tag - add to pending tags
+      pendingTags.push(tagName);
+    }
+    
+    // Select the tag
+    if (!selectedTags.includes(tagName)) {
+      selectedTags.push(tagName);
+    }
+    
+    hideNewTagInput();
+    renderTagTabs();
   }
 
   function deleteCard(cardId) {
@@ -1074,6 +1255,9 @@
     document.getElementById('cardsDeckName').textContent = deck.name;
     document.getElementById('cardsDeckCount').textContent = 
       `${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''} in this deck`;
+
+    // Render tag tabs
+    renderTagTabs();
 
     const container = document.getElementById('cardsList');
     const studySection = document.getElementById('studySection');
@@ -1348,6 +1532,16 @@
     div.textContent = text;
     return div.innerHTML;
   }
+
+  // Enter key support for new tag input
+  document.getElementById('newTagText').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewTag();
+    } else if (e.key === 'Escape') {
+      hideNewTagInput();
+    }
+  });
 
   // Start
   init();
