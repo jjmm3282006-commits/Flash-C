@@ -277,19 +277,13 @@
     border: 1px solid var(--border);
     border-radius: 12px;
     padding: 24px;
-    cursor: pointer;
     transition: all 0.2s;
-    position: relative;
     box-shadow: var(--shadow);
   }
 
   .deck-card:hover {
-    transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
-    border-color: var(--accent);
   }
-
-  .deck-card:active { transform: scale(0.98); }
 
   .deck-name { 
     font-weight: 600; 
@@ -303,33 +297,7 @@
     color: var(--text2);
   }
 
-  .deck-delete {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-    background: var(--bg3);
-    border: 1px solid var(--border);
-    color: var(--text3);
-    width: 32px;
-    height: 32px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
 
-  .deck-delete:hover {
-    background: var(--danger);
-    border-color: var(--danger);
-    color: white;
-  }
-
-  .deck-delete svg {
-    width: 16px;
-    height: 16px;
-  }
 
   /* Flashcard List */
   .flashcard-item {
@@ -762,8 +730,7 @@
     renderDecks();
   }
 
-  function deleteDeck(id, e) {
-    e.stopPropagation();
+  function deleteDeck(id) {
     if (!confirm('Delete this deck and all its cards?')) return;
     decks = decks.filter(d => d.id !== id);
     save();
@@ -788,14 +755,12 @@
     }
 
     container.innerHTML = '<div class="deck-grid">' + decks.map(deck => `
-      <div class="deck-card" onclick="openDeck('${deck.id}')">
-        <button class="deck-delete" onclick="deleteDeck('${deck.id}', event)" title="Delete deck">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-          </svg>
-        </button>
-        <div class="deck-name">${escapeHtml(deck.name)}</div>
-        <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
+      <div class="deck-card">
+        <div onclick="openDeck('${deck.id}')" style="cursor:pointer;">
+          <div class="deck-name">${escapeHtml(deck.name)}</div>
+          <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
+        </div>
+        <button class="btn btn-ghost" style="margin-top:12px; width:100%; padding:8px; font-size:13px; color:var(--danger);" onclick="deleteDeck('${deck.id}')">Delete</button>
       </div>
     `).join('') + '</div>';
   }
@@ -916,7 +881,7 @@
           <div class="flashcard-front">${escapeHtml(card.front)}</div>
           <div class="flashcard-back">${escapeHtml(card.back)}</div>
         </div>
-        <button class="flashcard-delete" onclick="deleteCard('${card.id}')" title="Delete card">
+        <button class="flashcard-delete" onclick="deleteCard('${card.id}')" ontouchend="event.preventDefault(); deleteCard('${card.id}')" title="Delete card" style="touch-action:manipulation;">
           <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
           </svg>
