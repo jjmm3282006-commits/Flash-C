@@ -1382,7 +1382,7 @@
       <div class="modal-body">
         <div id="p2pSenderView">
           <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
-            Share this QR code with another device. They scan it to receive the deck directly via peer-to-peer connection.
+            Share this QR code or copy the code below. The receiver scans or pastes it to get the deck directly via peer-to-peer.
           </p>
           <div class="qr-container">
             <div id="p2pQrCode"></div>
@@ -1436,15 +1436,14 @@
         
         <div id="scannerManualView" style="display:none;">
           <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
-            Camera not available. Enter the connection link manually:
+            Enter the connection code or link shared by the sender:
           </p>
           <div class="share-link-box">
-            <input type="text" id="manualP2PUrl" placeholder="Paste the P2P connection link here...">
+            <input type="text" id="manualP2PUrl" placeholder="Paste code or link here...">
             <button class="btn btn-primary" onclick="connectFromManualInput()">Connect</button>
           </div>
           <p style="color:var(--text3); font-size:12px; margin-top:12px; line-height:1.5;">
-            💡 <strong>Tip:</strong> For camera access, host this app on GitHub Pages or use HTTPS. 
-            Ask the sender to copy the link and share it with you.
+            💡 Ask the sender to click "Copy" on their share screen and send you the code.
           </p>
         </div>
         
@@ -1460,9 +1459,12 @@
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-  // GitHub repo URL - UPDATE THIS WITH YOUR ACTUAL REPO
+  // App download URL - UPDATE THIS WITH YOUR ACTUAL REPO (optional)
   const GITHUB_REPO_URL = 'https://raw.githubusercontent.com/yourusername/yourrepo/main/flashcard.html';
-  const APP_URL = 'https://yourusername.github.io/yourrepo/flashcard.html'; // Hosted version URL for P2P
+  
+  // Hosted app URL (optional - only needed if you want QR codes to auto-open the app)
+  // Leave empty to share just the peer ID code instead
+  const APP_URL = '';
   
   // State
   let decks = [];
@@ -2560,7 +2562,7 @@
     const qrContainer = document.getElementById('qrcode');
     const shareLink = document.getElementById('shareLink');
     
-    // Set the share link
+    // Set the share link (for downloading the app)
     shareLink.value = GITHUB_REPO_URL;
     
     // Clear previous QR code
@@ -2677,8 +2679,9 @@
     const qrContainer = document.getElementById('p2pQrCode');
     const shareLink = document.getElementById('p2pShareLink');
     
-    // Generate the share URL
-    const shareUrl = `${APP_URL}?receive=${peerId}`;
+    // Generate the share link - just the peer ID
+    // If APP_URL is set, include it; otherwise just the ID
+    const shareUrl = APP_URL ? `${APP_URL}?receive=${peerId}` : peerId;
     shareLink.value = shareUrl;
     
     // Clear previous QR code
@@ -3014,31 +3017,15 @@
 
   function connectFromManualInput() {
     const input = document.getElementById('manualP2PUrl');
-    const url = input.value.trim();
+    const text = input.value.trim();
     
-    if (!url) {
-      alert('Please enter a connection link');
+    if (!text) {
+      alert('Please enter a connection code or link');
       return;
     }
     
-    // Parse the URL
-    try {
-      const parsedUrl = new URL(url);
-      const receiveId = parsedUrl.searchParams.get('receive');
-      
-      if (receiveId) {
-        // Close scanner modal
-        closeScanner();
-        
-        // Connect to P2P sender
-        connectToP2PSender(receiveId);
-      } else {
-        alert('Invalid connection link. Please check the URL and try again.');
-      }
-    } catch (err) {
-      console.error('Error parsing URL:', err);
-      alert('Invalid URL format. Please check the link and try again.');
-    }
+    closeScanner();
+    handleConnectionInput(text);
   }
 
   function onScanSuccess(decodedText, decodedResult) {
@@ -3055,21 +3042,38 @@
     // Close scanner modal
     closeScanner();
     
-    // Parse the QR code URL
+    // Parse the QR code - could be a full URL or just a peer ID
+    handleConnectionInput(decodedText);
+  }
+
+  function handleConnectionInput(input) {
+    const text = input.trim();
+    
+    if (!text) {
+      alert('Empty input. Please try again.');
+      return;
+    }
+    
+    // Try to parse as URL first
     try {
-      const url = new URL(decodedText);
+      const url = new URL(text);
       const receiveId = url.searchParams.get('receive');
       
       if (receiveId) {
-        // Connect to P2P sender
         connectToP2PSender(receiveId);
-      } else {
-        alert('Invalid QR code. Please scan a valid deck sharing code.');
+        return;
       }
     } catch (err) {
-      console.error('Error parsing QR code:', err);
-      alert('Invalid QR code format. Please scan a valid deck sharing code.');
+      // Not a URL, that's fine - might be a peer ID
     }
+    
+    // Check if it looks like a peer ID (starts with "flashcard-")
+    if (text.startsWith('flashcard-')) {
+      connectToP2PSender(text);
+      return;
+    }
+    
+    alert('Invalid connection code. Please check and try again.');
   }
 
   function onScanFailure(error) {
