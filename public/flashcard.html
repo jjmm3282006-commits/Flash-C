@@ -576,6 +576,107 @@
     color: var(--text);
   }
 
+  /* Filter Bar */
+  .filter-bar {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover {
+    background: var(--bg3);
+  }
+
+  .filter-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .filter-select {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+  }
+
+  /* Tag Pills */
+  .tag-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 11px;
+    margin-right: 4px;
+    margin-top: 4px;
+  }
+
+  /* Learned Indicator */
+  .learned-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  .not-learned-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--text3);
+    flex-shrink: 0;
+    margin-top: 6px;
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .stat-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  .stat-dot.learned {
+    background: var(--success);
+  }
+
+  .stat-dot.not-learned {
+    background: var(--text3);
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
@@ -637,6 +738,7 @@
       <form class="form-stack" onsubmit="addCard(event)">
         <input type="text" id="cardFront" placeholder="Front (question or term)..." autocomplete="off">
         <input type="text" id="cardBack" placeholder="Back (answer or definition)..." autocomplete="off">
+        <input type="text" id="cardTags" placeholder="Tags (optional, comma-separated: math, chapter1)..." autocomplete="off">
         <button type="submit" class="btn btn-primary btn-full">Add Card</button>
       </form>
     </div>
@@ -644,13 +746,13 @@
     <div class="card">
       <div class="card-label">Bulk Import</div>
       <p style="font-size:14px; color:var(--text2); margin-bottom:12px;">
-        Paste multiple cards using (question) [answer] format
+        Paste multiple cards using (question) [answer] format. Add optional tags with {tag1, tag2}
       </p>
       <textarea 
         id="bulkImportText" 
         placeholder="(What is 2+2?) [4]
-(The capital of France?) [Paris]
-(H2O is the chemical formula for?) [Water]"
+(The capital of France?) [Paris] {geography}
+(H2O is the chemical formula for?) [Water] {science, chemistry}"
         style="width:100%; min-height:120px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg2); color:var(--text); outline:none; resize:vertical; font-family:inherit; transition:all 0.2s;"
         onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(66, 153, 225, 0.1)';"
         onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
@@ -659,11 +761,27 @@
       <div id="bulkImportResult" style="margin-top:12px; font-size:14px; display:none;"></div>
     </div>
 
+    <div id="filterBar" style="display:none">
+      <div class="section-label">Filters</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" data-filter="learned" onclick="setFilter('learned')">Learned</button>
+        <button class="filter-btn" data-filter="not-learned" onclick="setFilter('not-learned')">Not Learned</button>
+        <select class="filter-select" id="tagFilter" onchange="setTagFilter(this.value)">
+          <option value="">All Tags</option>
+        </select>
+      </div>
+      <div class="stats-row" id="statsRow"></div>
+    </div>
+
     <div id="cardsList"></div>
 
     <div id="studySection" style="display:none">
       <button class="btn btn-success btn-full" style="padding:16px; font-size:16px; margin-top:12px;" onclick="startStudy()">
         Start Studying
+      </button>
+      <button class="btn btn-ghost btn-full" style="padding:10px; font-size:13px; margin-top:8px; color:var(--text2);" onclick="resetProgress()">
+        Reset Progress
       </button>
     </div>
   </div>
@@ -722,6 +840,9 @@
   let studyFlipped = false;
   let knownCount = 0;
   let darkMode = false;
+  let currentFilter = 'all';
+  let currentTagFilter = '';
+  let studyCards = []; // Filtered cards for study mode
 
   // Init
   function init() {
@@ -803,6 +924,8 @@
 
   function openDeck(id) {
     currentDeckId = id;
+    currentFilter = 'all';
+    currentTagFilter = '';
     renderCards();
     showView('cardsView');
   }
@@ -852,17 +975,24 @@
     e.preventDefault();
     const front = document.getElementById('cardFront').value.trim();
     const back = document.getElementById('cardBack').value.trim();
+    const tagsInput = document.getElementById('cardTags').value.trim();
     if (!front || !back) return;
+
+    // Parse tags
+    const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
 
     const deck = getCurrentDeck();
     deck.cards.push({
       id: Date.now().toString(),
       front: front,
-      back: back
+      back: back,
+      tags: tags,
+      learned: false
     });
     save();
     document.getElementById('cardFront').value = '';
     document.getElementById('cardBack').value = '';
+    document.getElementById('cardTags').value = '';
     document.getElementById('cardFront').focus();
     renderCards();
   }
@@ -886,23 +1016,25 @@
       return;
     }
 
-    // Parse (question) [answer] pairs
-    const regex = /\(([^)]+)\)\s*\[([^\]]+)\]/g;
+    // Parse (question) [answer] {optional tags} pairs
+    const regex = /\(([^)]+)\)\s*\[([^\]]+)\](?:\s*\{([^}]*)\})?/g;
     const matches = [];
     let match;
     
     while ((match = regex.exec(text)) !== null) {
       const front = match[1].trim();
       const back = match[2].trim();
+      const tagsStr = match[3] ? match[3].trim() : '';
+      const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
       if (front && back) {
-        matches.push({ front, back });
+        matches.push({ front, back, tags });
       }
     }
 
     if (matches.length === 0) {
       resultDiv.style.display = 'block';
       resultDiv.style.color = 'var(--danger)';
-      resultDiv.textContent = 'No valid cards found. Use format: (question) [answer]';
+      resultDiv.textContent = 'No valid cards found. Use format: (question) [answer] or (question) [answer] {tag1, tag2}';
       return;
     }
 
@@ -912,7 +1044,9 @@
       deck.cards.push({
         id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
         front: card.front,
-        back: card.back
+        back: card.back,
+        tags: card.tags,
+        learned: false
       });
     });
     
@@ -943,6 +1077,7 @@
 
     const container = document.getElementById('cardsList');
     const studySection = document.getElementById('studySection');
+    const filterBar = document.getElementById('filterBar');
 
     if (deck.cards.length === 0) {
       container.innerHTML = `
@@ -950,26 +1085,113 @@
           <div class="empty-state-text">No cards yet. Add your first card above.</div>
         </div>`;
       studySection.style.display = 'none';
+      filterBar.style.display = 'none';
       return;
     }
 
-    container.innerHTML = '<div class="section-label">Cards</div>' + deck.cards.map(card => `
-      <div class="flashcard-item">
-        <div class="flashcard-content">
-          <div class="flashcard-front">${escapeHtml(card.front)}</div>
-          <div class="flashcard-back">${escapeHtml(card.back)}</div>
-        </div>
-        <button class="flashcard-delete" onclick="deleteCard('${card.id}')" ontouchend="event.preventDefault(); deleteCard('${card.id}')" title="Delete card" style="touch-action:manipulation;">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-          </svg>
-        </button>
-      </div>
-    `).join('');
+    // Show filter bar
+    filterBar.style.display = 'block';
 
+    // Update tag filter dropdown
+    const allTags = [...new Set(deck.cards.flatMap(c => c.tags || []))].sort();
+    const tagSelect = document.getElementById('tagFilter');
+    tagSelect.innerHTML = '<option value="">All Tags</option>' + 
+      allTags.map(tag => `<option value="${escapeHtml(tag)}" ${currentTagFilter === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('');
+
+    // Filter cards
+    let filteredCards = deck.cards;
+    if (currentFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (currentFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    if (currentTagFilter) {
+      filteredCards = filteredCards.filter(c => (c.tags || []).includes(currentTagFilter));
+    }
+
+    // Update stats
+    const learnedCount = deck.cards.filter(c => c.learned).length;
+    const notLearnedCount = deck.cards.length - learnedCount;
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-item">
+        <div class="stat-dot learned"></div>
+        <span>${learnedCount} learned</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-dot not-learned"></div>
+        <span>${notLearnedCount} not learned</span>
+      </div>
+    `;
+
+    // Update filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+    });
+
+    if (filteredCards.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-text">No cards match the current filters.</div>
+        </div>`;
+    } else {
+      container.innerHTML = '<div class="section-label">Cards (' + filteredCards.length + ')</div>' + filteredCards.map(card => `
+        <div class="flashcard-item">
+          <div class="${card.learned ? 'learned-indicator' : 'not-learned-indicator'}"></div>
+          <div class="flashcard-content">
+            <div class="flashcard-front">${escapeHtml(card.front)}</div>
+            <div class="flashcard-back">${escapeHtml(card.back)}</div>
+            ${(card.tags && card.tags.length > 0) ? '<div>' + card.tags.map(t => '<span class="tag-pill">' + escapeHtml(t) + '</span>').join('') + '</div>' : ''}
+          </div>
+          <button class="flashcard-delete" onclick="deleteCard('${card.id}')" ontouchend="event.preventDefault(); deleteCard('${card.id}')" title="Delete card" style="touch-action:manipulation;">
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+          </button>
+        </div>
+      `).join('');
+    }
+
+    // Update study button
+    const cardsToStudy = getFilteredCards().length;
     studySection.style.display = 'block';
     studySection.querySelector('button').textContent = 
-      `Start Studying (${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''})`;
+      cardsToStudy > 0 ? `Start Studying (${cardsToStudy} card${cardsToStudy !== 1 ? 's' : ''})` : 'No cards to study';
+    studySection.querySelector('button').disabled = cardsToStudy === 0;
+  }
+
+  function getFilteredCards() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    
+    let filteredCards = deck.cards;
+    if (currentFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (currentFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    if (currentTagFilter) {
+      filteredCards = filteredCards.filter(c => (c.tags || []).includes(currentTagFilter));
+    }
+    return filteredCards;
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    renderCards();
+  }
+
+  function setTagFilter(tag) {
+    currentTagFilter = tag;
+    renderCards();
+  }
+
+  function resetProgress() {
+    if (!confirm('Reset all learning progress? This will mark all cards as not learned.')) return;
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    deck.cards.forEach(card => card.learned = false);
+    save();
+    renderCards();
   }
 
   // Study Mode
@@ -977,9 +1199,13 @@
     const deck = getCurrentDeck();
     if (!deck || deck.cards.length === 0) return;
 
-    // Shuffle cards
-    deck.cards = shuffleArray([...deck.cards]);
-    save();
+    // Get filtered cards and shuffle them
+    studyCards = shuffleArray([...getFilteredCards()]);
+    
+    if (studyCards.length === 0) {
+      alert('No cards match the current filters.');
+      return;
+    }
 
     studyIndex = 0;
     studyFlipped = false;
@@ -994,8 +1220,7 @@
   }
 
   function renderStudyCard() {
-    const deck = getCurrentDeck();
-    const card = deck.cards[studyIndex];
+    const card = studyCards[studyIndex];
     
     document.getElementById('studyFront').textContent = card.front;
     document.getElementById('studyBack').textContent = card.back;
@@ -1010,13 +1235,13 @@
     syncCardHeights();
 
     // Progress
-    const progress = ((studyIndex + 1) / deck.cards.length) * 100;
+    const progress = ((studyIndex + 1) / studyCards.length) * 100;
     document.getElementById('progressFill').style.width = progress + '%';
-    document.getElementById('progressText').textContent = `${studyIndex + 1} / ${deck.cards.length}`;
+    document.getElementById('progressText').textContent = `${studyIndex + 1} / ${studyCards.length}`;
 
     // Nav buttons
     document.getElementById('prevBtn').disabled = studyIndex === 0;
-    document.getElementById('nextBtn').disabled = studyIndex === deck.cards.length - 1;
+    document.getElementById('nextBtn').disabled = studyIndex === studyCards.length - 1;
   }
 
   function syncCardHeights() {
@@ -1064,13 +1289,22 @@
   }
 
   function rateCard(known) {
+    const card = studyCards[studyIndex];
+    
+    // Update learned state in the actual deck
+    const deck = getCurrentDeck();
+    const actualCard = deck.cards.find(c => c.id === card.id);
+    if (actualCard) {
+      actualCard.learned = known;
+      save();
+    }
+    
     if (known) knownCount++;
     nextCard();
   }
 
   function nextCard() {
-    const deck = getCurrentDeck();
-    if (studyIndex < deck.cards.length - 1) {
+    if (studyIndex < studyCards.length - 1) {
       studyIndex++;
       renderStudyCard();
     } else {
@@ -1086,15 +1320,14 @@
   }
 
   function showResult() {
-    const deck = getCurrentDeck();
     document.getElementById('studyCardArea').style.display = 'none';
     document.getElementById('studyResult').style.display = 'block';
     document.getElementById('resultText').textContent = 
-      `You knew ${knownCount} out of ${deck.cards.length} cards`;
+      `You knew ${knownCount} out of ${studyCards.length} cards`;
     
     // Update progress to 100%
     document.getElementById('progressFill').style.width = '100%';
-    document.getElementById('progressText').textContent = `${deck.cards.length} / ${deck.cards.length}`;
+    document.getElementById('progressText').textContent = `${studyCards.length} / ${studyCards.length}`;
   }
 
   function restartStudy() {
