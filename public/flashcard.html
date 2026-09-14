@@ -1415,7 +1415,7 @@
 
     tagTabs.innerHTML = allTags.map(tag => {
       const isSelected = editSelectedTags.includes(tag);
-      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
+      return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
     }).join('');
   }
 
