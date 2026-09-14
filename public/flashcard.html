@@ -1027,6 +1027,29 @@
     font-family: monospace;
   }
 
+  /* P2P Status Messages */
+  #p2pStatus {
+    font-weight: 500;
+  }
+
+  #p2pReceiverStatus p {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  #p2pDeckPreview {
+    border: 1px solid var(--border);
+  }
+
+  #p2pDeckName {
+    color: var(--text);
+    font-size: 16px;
+  }
+
+  #p2pDeckCount {
+    font-size: 14px;
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
@@ -1152,6 +1175,9 @@
     <div id="studySection" style="display:none">
       <button class="btn btn-success btn-full" style="padding:16px; font-size:16px; margin-top:12px;" onclick="startStudy()">
         Start Studying
+      </button>
+      <button class="btn btn-primary btn-full" style="padding:10px; font-size:13px; margin-top:8px;" onclick="startP2PShare()">
+        Share Deck via QR (P2P)
       </button>
       <button class="btn btn-ghost btn-full" style="padding:10px; font-size:13px; margin-top:8px; color:var(--text2);" onclick="resetProgress()">
         Reset Progress
@@ -1289,12 +1315,58 @@
       </div>
     </div>
   </div>
+
+  <!-- P2P Share Modal -->
+  <div id="p2pShareModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 id="p2pModalTitle">Share Deck via P2P</h3>
+        <button class="modal-close" onclick="closeP2PShareModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="p2pSenderView">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Share this QR code with another device. They scan it to receive the deck directly via peer-to-peer connection.
+          </p>
+          <div class="qr-container">
+            <div id="p2pQrCode"></div>
+          </div>
+          <div class="share-link-box">
+            <input type="text" id="p2pShareLink" readonly>
+            <button class="btn btn-primary" onclick="copyP2PLink()">Copy</button>
+          </div>
+          <p id="p2pStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
+            Waiting for connection...
+          </p>
+          <p id="p2pCopyFeedback" style="color:var(--success); font-size:13px; margin-top:8px; display:none; text-align:center;">Link copied!</p>
+        </div>
+        <div id="p2pReceiverView" style="display:none;">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            You're receiving a deck via P2P connection.
+          </p>
+          <div id="p2pReceiverStatus" style="text-align:center; padding:20px;">
+            <p style="color:var(--text2); font-size:14px;">Connecting to sender...</p>
+          </div>
+          <div id="p2pReceivedDeck" style="display:none;">
+            <h4 style="margin-bottom:12px;">Received Deck:</h4>
+            <div id="p2pDeckPreview" style="background:var(--bg3); padding:16px; border-radius:8px; margin-bottom:16px;">
+              <p id="p2pDeckName" style="font-weight:600; margin-bottom:8px;"></p>
+              <p id="p2pDeckCount" style="color:var(--text2); font-size:13px;"></p>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="importReceivedDeck()">Import Deck</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
 <script>
   // GitHub repo URL - UPDATE THIS WITH YOUR ACTUAL REPO
   const GITHUB_REPO_URL = 'https://raw.githubusercontent.com/yourusername/yourrepo/main/flashcard.html';
+  const APP_URL = 'https://yourusername.github.io/yourrepo/flashcard.html'; // Hosted version URL for P2P
   
   // State
   let decks = [];
@@ -1310,6 +1382,11 @@
   let pendingTags = []; // Tags created but not yet used in any card
   let studyFilter = 'all'; // Filter for study mode
   let studyTagFilter = ''; // Tag filter for study mode
+  
+  // P2P State
+  let peer = null;
+  let currentConnection = null;
+  let isSharing = false;
 
   // Init
   function init() {
@@ -2439,8 +2516,265 @@
     }
   }
 
+  // P2P Sharing Functions
+  function startP2PShare() {
+    const deck = getCurrentDeck();
+    if (!deck || deck.cards.length === 0) {
+      alert('No cards to share!');
+      return;
+    }
+
+    // Initialize PeerJS
+    const peerId = 'flashcard-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    peer = new Peer(peerId);
+
+    peer.on('open', (id) => {
+      console.log('P2P Peer ID:', id);
+      showP2PShareModal(id, deck);
+    });
+
+    peer.on('connection', (conn) => {
+      console.log('Incoming connection');
+      currentConnection = conn;
+      
+      conn.on('open', () => {
+        console.log('Connection established, sending deck');
+        document.getElementById('p2pStatus').textContent = 'Connected! Sending deck...';
+        document.getElementById('p2pStatus').style.color = 'var(--success)';
+        
+        // Send the deck data
+        conn.send({
+          type: 'deck',
+          data: deck
+        });
+        
+        setTimeout(() => {
+          document.getElementById('p2pStatus').textContent = 'Deck sent successfully!';
+          conn.close();
+          setTimeout(() => {
+            closeP2PShareModal();
+          }, 2000);
+        }, 1000);
+      });
+
+      conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('p2pStatus').textContent = 'Connection error: ' + err;
+        document.getElementById('p2pStatus').style.color = 'var(--danger)';
+      });
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      alert('P2P connection error: ' + err);
+    });
+  }
+
+  function showP2PShareModal(peerId, deck) {
+    const modal = document.getElementById('p2pShareModal');
+    const qrContainer = document.getElementById('p2pQrCode');
+    const shareLink = document.getElementById('p2pShareLink');
+    
+    // Generate the share URL
+    const shareUrl = `${APP_URL}?receive=${peerId}`;
+    shareLink.value = shareUrl;
+    
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+    
+    // Generate QR code
+    new QRCode(qrContainer, {
+      text: shareUrl,
+      width: 220,
+      height: 220,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.M
+    });
+    
+    // Reset status
+    document.getElementById('p2pStatus').textContent = 'Waiting for connection...';
+    document.getElementById('p2pStatus').style.color = 'var(--text2)';
+    document.getElementById('p2pCopyFeedback').style.display = 'none';
+    
+    // Show sender view
+    document.getElementById('p2pSenderView').style.display = 'block';
+    document.getElementById('p2pReceiverView').style.display = 'none';
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeP2PShareModal();
+      }
+    };
+  }
+
+  function closeP2PShareModal() {
+    const modal = document.getElementById('p2pShareModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    
+    // Clean up PeerJS connection
+    if (peer) {
+      peer.destroy();
+      peer = null;
+    }
+    if (currentConnection) {
+      currentConnection.close();
+      currentConnection = null;
+    }
+  }
+
+  function copyP2PLink() {
+    const shareLink = document.getElementById('p2pShareLink');
+    const feedback = document.getElementById('p2pCopyFeedback');
+    
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999);
+    
+    try {
+      document.execCommand('copy');
+      feedback.style.display = 'block';
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
+    } catch (err) {
+      navigator.clipboard.writeText(shareLink.value).then(() => {
+        feedback.style.display = 'block';
+        setTimeout(() => {
+          feedback.style.display = 'none';
+        }, 2000);
+      });
+    }
+  }
+
+  // Check for incoming P2P connection on page load
+  function checkForP2PReceive() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiveId = urlParams.get('receive');
+    
+    if (receiveId) {
+      console.log('Attempting to receive deck from:', receiveId);
+      connectToP2PSender(receiveId);
+    }
+  }
+
+  function connectToP2PSender(peerId) {
+    // Initialize PeerJS as receiver
+    peer = new Peer();
+
+    peer.on('open', (id) => {
+      console.log('Receiver Peer ID:', id);
+      showP2PReceiveModal();
+      
+      // Connect to sender
+      const conn = peer.connect(peerId);
+      currentConnection = conn;
+      
+      conn.on('open', () => {
+        console.log('Connected to sender');
+        document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--success); font-size:14px;">Connected! Waiting for deck...</p>';
+      });
+
+      conn.on('data', (data) => {
+        console.log('Received data:', data);
+        if (data.type === 'deck') {
+          handleReceivedDeck(data.data);
+        }
+      });
+
+      conn.on('close', () => {
+        console.log('Connection closed');
+      });
+
+      conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">Connection error: ' + err + '</p>';
+      });
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      alert('P2P connection error: ' + err);
+    });
+  }
+
+  function showP2PReceiveModal() {
+    const modal = document.getElementById('p2pShareModal');
+    
+    // Show receiver view
+    document.getElementById('p2pSenderView').style.display = 'none';
+    document.getElementById('p2pReceiverView').style.display = 'block';
+    document.getElementById('p2pReceivedDeck').style.display = 'none';
+    document.getElementById('p2pReceiverStatus').style.display = 'block';
+    
+    // Update title
+    document.getElementById('p2pModalTitle').textContent = 'Receive Deck via P2P';
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeP2PShareModal();
+      }
+    };
+  }
+
+  let receivedDeckData = null;
+
+  function handleReceivedDeck(deck) {
+    receivedDeckData = deck;
+    
+    // Hide status, show deck preview
+    document.getElementById('p2pReceiverStatus').style.display = 'none';
+    document.getElementById('p2pReceivedDeck').style.display = 'block';
+    
+    // Show deck info
+    document.getElementById('p2pDeckName').textContent = deck.name;
+    document.getElementById('p2pDeckCount').textContent = `${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}`;
+  }
+
+  function importReceivedDeck() {
+    if (!receivedDeckData) return;
+    
+    // Create a new deck with a unique ID
+    const newDeck = {
+      id: Date.now().toString(),
+      name: receivedDeckData.name + ' (Received)',
+      cards: receivedDeckData.cards.map(card => ({
+        ...card,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        learned: false // Reset learned status
+      }))
+    };
+    
+    decks.push(newDeck);
+    save();
+    
+    // Close modal and show success
+    closeP2PShareModal();
+    
+    // Navigate to the new deck
+    currentDeckId = newDeck.id;
+    renderCards();
+    showView('cardsView');
+    
+    alert('Deck imported successfully!');
+    
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
   // Start
   init();
+  
+  // Check for incoming P2P connection
+  checkForP2PReceive();
 </script>
 
 </body>
