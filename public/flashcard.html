@@ -756,13 +756,27 @@
 
     container.innerHTML = '<div class="deck-grid">' + decks.map(deck => `
       <div class="deck-card">
-        <div onclick="openDeck('${deck.id}')" style="cursor:pointer;">
+        <div class="deck-info" data-deck-id="${deck.id}" style="cursor:pointer;">
           <div class="deck-name">${escapeHtml(deck.name)}</div>
           <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
         </div>
-        <button class="btn btn-ghost" style="margin-top:12px; width:100%; padding:8px; font-size:13px; color:var(--danger);" onclick="deleteDeck('${deck.id}')">Delete</button>
+        <button class="btn btn-ghost deck-delete-btn" data-deck-id="${deck.id}" style="margin-top:12px; width:100%; padding:8px; font-size:13px; color:var(--danger);">Delete</button>
       </div>
     `).join('') + '</div>';
+
+    // Attach event listeners
+    document.querySelectorAll('.deck-info').forEach(el => {
+      el.addEventListener('click', function() {
+        openDeck(this.dataset.deckId);
+      });
+    });
+
+    document.querySelectorAll('.deck-delete-btn').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        deleteDeck(this.dataset.deckId);
+      });
+    });
   }
 
   // Cards
