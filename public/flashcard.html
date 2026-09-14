@@ -1034,6 +1034,16 @@
   <div class="view" id="studyView">
     <h2 class="page-title" id="studyDeckName"></h2>
     
+    <!-- Study Filters -->
+    <div class="filter-bar" style="margin-bottom:20px;">
+      <button class="filter-btn active" data-study-filter="all" onclick="setStudyFilter('all')">All</button>
+      <button class="filter-btn" data-study-filter="learned" onclick="setStudyFilter('learned')">Learned</button>
+      <button class="filter-btn" data-study-filter="not-learned" onclick="setStudyFilter('not-learned')">Not Learned</button>
+      <select class="filter-select" id="studyTagFilter" onchange="setStudyTagFilter(this.value)">
+        <option value="">All Tags</option>
+      </select>
+    </div>
+
     <div class="progress-container">
       <div class="progress-bar">
         <div class="progress-fill" id="progressFill"></div>
@@ -1139,6 +1149,8 @@
   let studyCards = []; // Filtered cards for study mode
   let selectedTags = []; // Tags selected for the current card being added
   let pendingTags = []; // Tags created but not yet used in any card
+  let studyFilter = 'all'; // Filter for study mode
+  let studyTagFilter = ''; // Tag filter for study mode
 
   // Init
   function init() {
@@ -1732,6 +1744,68 @@
     renderCards();
   }
 
+  // Study Mode Filters
+  function setStudyFilter(filter) {
+    studyFilter = filter;
+    // Update button states
+    document.querySelectorAll('[data-study-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.studyFilter === filter);
+    });
+    // Restart study with new filter
+    restartStudyWithFilters();
+  }
+
+  function setStudyTagFilter(tag) {
+    studyTagFilter = tag;
+    // Restart study with new filter
+    restartStudyWithFilters();
+  }
+
+  function getStudyFilteredCards() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    
+    let filteredCards = deck.cards;
+    
+    // Apply learned filter
+    if (studyFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (studyFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    
+    // Apply tag filter
+    if (studyTagFilter) {
+      filteredCards = filteredCards.filter(c => (c.tags || []).includes(studyTagFilter));
+    }
+    
+    return filteredCards;
+  }
+
+  function restartStudyWithFilters() {
+    const filteredCards = getStudyFilteredCards();
+    
+    if (filteredCards.length === 0) {
+      document.getElementById('studyCardArea').style.display = 'none';
+      document.getElementById('studyResult').style.display = 'block';
+      document.getElementById('resultText').textContent = 'No cards match the current filters.';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressText').textContent = '0 / 0';
+      return;
+    }
+    
+    // Shuffle and restart
+    studyCards = shuffleArray([...filteredCards]);
+    studyIndex = 0;
+    studyFlipped = false;
+    knownCount = 0;
+    
+    document.getElementById('studyCardArea').style.display = 'block';
+    document.getElementById('studyResult').style.display = 'none';
+    
+    renderStudyCard();
+  }
+
   async function resetProgress() {
     const confirmed = await showConfirm(
       'Reset Progress',
@@ -1751,11 +1825,32 @@
     const deck = getCurrentDeck();
     if (!deck || deck.cards.length === 0) return;
 
+    // Reset study filters to match current view filters
+    studyFilter = currentFilter;
+    studyTagFilter = currentTagFilter;
+    
+    // Update study filter buttons
+    document.querySelectorAll('[data-study-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.studyFilter === studyFilter);
+    });
+    
+    // Populate study tag filter dropdown
+    const allTags = [...new Set(deck.cards.flatMap(c => c.tags || []))].sort();
+    const studyTagSelect = document.getElementById('studyTagFilter');
+    studyTagSelect.innerHTML = '<option value="">All Tags</option>' + 
+      allTags.map(tag => `<option value="${escapeHtml(tag)}" ${studyTagFilter === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('');
+
     // Get filtered cards and shuffle them
-    studyCards = shuffleArray([...getFilteredCards()]);
+    studyCards = shuffleArray([...getStudyFilteredCards()]);
     
     if (studyCards.length === 0) {
-      alert('No cards match the current filters.');
+      document.getElementById('studyDeckName').textContent = deck.name;
+      document.getElementById('studyCardArea').style.display = 'none';
+      document.getElementById('studyResult').style.display = 'block';
+      document.getElementById('resultText').textContent = 'No cards match the current filters.';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressText').textContent = '0 / 0';
+      showView('studyView');
       return;
     }
 
