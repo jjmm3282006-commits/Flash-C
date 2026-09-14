@@ -1061,6 +1061,46 @@
     font-size: 14px;
   }
 
+  /* QR Scanner Styles */
+  #qr-reader {
+    border: 2px solid var(--border);
+  }
+
+  #qr-reader video {
+    border-radius: 12px;
+  }
+
+  #qr-reader__dashboard_section_csr button {
+    background: var(--accent) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+  }
+
+  #qr-reader__dashboard_section_csr button:hover {
+    background: var(--accent2) !important;
+  }
+
+  #qr-reader__dashboard_section_fsr button {
+    background: var(--bg3) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+  }
+
+  #qr-reader__scan_region {
+    min-height: 300px;
+  }
+
+  #qr-reader__dashboard {
+    padding: 20px !important;
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
@@ -1089,6 +1129,11 @@
     <h1>Flashcard Maker</h1>
   </div>
   <div class="header-right">
+    <button class="icon-btn" id="scanBtn" onclick="showScanner()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+      </svg>
+    </button>
     <button class="icon-btn" id="shareBtn" onclick="showShareModal()">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
@@ -1370,10 +1415,30 @@
       </div>
     </div>
   </div>
+
+  <!-- QR Scanner Modal -->
+  <div id="scannerModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3>Scan QR Code</h3>
+        <button class="modal-close" onclick="closeScanner()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+          Point your camera at a QR code to receive a deck
+        </p>
+        <div id="qr-reader" style="width:100%; border-radius:12px; overflow:hidden;"></div>
+        <p id="scannerStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
+          Initializing camera...
+        </p>
+      </div>
+    </div>
+  </div>
 </main>
 
 <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
   // GitHub repo URL - UPDATE THIS WITH YOUR ACTUAL REPO
   const GITHUB_REPO_URL = 'https://raw.githubusercontent.com/yourusername/yourrepo/main/flashcard.html';
@@ -2452,9 +2517,15 @@
       const editModal = document.getElementById('editModal');
       const confirmModal = document.getElementById('confirmModal');
       const shareModal = document.getElementById('shareModal');
+      const p2pModal = document.getElementById('p2pShareModal');
+      const scannerModal = document.getElementById('scannerModal');
       
       if (confirmModal.classList.contains('active')) {
         document.getElementById('confirmCancelBtn').click();
+      } else if (scannerModal.classList.contains('active')) {
+        closeScanner();
+      } else if (p2pModal.classList.contains('active')) {
+        closeP2PShareModal();
       } else if (shareModal.classList.contains('active')) {
         closeShareModal();
       } else if (editModal.classList.contains('active')) {
@@ -2779,6 +2850,120 @@
     
     // Clean up URL
     window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // QR Scanner Functions
+  let html5QrcodeScanner = null;
+
+  function showScanner() {
+    const modal = document.getElementById('scannerModal');
+    const status = document.getElementById('scannerStatus');
+    
+    // Show modal
+    modal.classList.add('active');
+    status.textContent = 'Initializing camera...';
+    status.style.color = 'var(--text2)';
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeScanner();
+      }
+    };
+    
+    // Initialize scanner after a short delay to ensure modal is visible
+    setTimeout(() => {
+      initScanner();
+    }, 300);
+  }
+
+  function closeScanner() {
+    const modal = document.getElementById('scannerModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    
+    // Stop scanner
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }).catch(err => {
+        console.log('Error stopping scanner:', err);
+      });
+    }
+  }
+
+  function initScanner() {
+    const status = document.getElementById('scannerStatus');
+    
+    // Check if browser supports camera
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = 'Camera access not supported in this browser';
+      status.style.color = 'var(--danger)';
+      return;
+    }
+    
+    // Create scanner instance
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    
+    const config = {
+      fps: 10,
+      qrbox: { width: 250, height: 250 },
+      aspectRatio: 1.0
+    };
+    
+    html5QrcodeScanner.start(
+      { facingMode: "environment" },
+      config,
+      onScanSuccess,
+      onScanFailure
+    ).then(() => {
+      status.textContent = 'Point camera at QR code';
+      status.style.color = 'var(--success)';
+    }).catch(err => {
+      status.textContent = 'Camera access denied or not available';
+      status.style.color = 'var(--danger)';
+      console.error('Scanner error:', err);
+    });
+  }
+
+  function onScanSuccess(decodedText, decodedResult) {
+    console.log('QR Code scanned:', decodedText);
+    
+    // Stop scanner
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      });
+    }
+    
+    // Close scanner modal
+    closeScanner();
+    
+    // Parse the QR code URL
+    try {
+      const url = new URL(decodedText);
+      const receiveId = url.searchParams.get('receive');
+      
+      if (receiveId) {
+        // Connect to P2P sender
+        connectToP2PSender(receiveId);
+      } else {
+        alert('Invalid QR code. Please scan a valid deck sharing code.');
+      }
+    } catch (err) {
+      console.error('Error parsing QR code:', err);
+      alert('Invalid QR code format. Please scan a valid deck sharing code.');
+    }
+  }
+
+  function onScanFailure(error) {
+    // Ignore scan failures (happens continuously while scanning)
+    // Only log actual errors
+    if (error && error !== 'NotFoundException') {
+      console.warn('Scan failure:', error);
+    }
   }
 
   // Start
