@@ -1420,17 +1420,37 @@
   <div id="scannerModal" class="modal">
     <div class="modal-content" style="max-width:500px;">
       <div class="modal-header">
-        <h3>Scan QR Code</h3>
+        <h3>Receive Deck</h3>
         <button class="modal-close" onclick="closeScanner()">&times;</button>
       </div>
       <div class="modal-body">
-        <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
-          Point your camera at a QR code to receive a deck
-        </p>
-        <div id="qr-reader" style="width:100%; border-radius:12px; overflow:hidden;"></div>
-        <p id="scannerStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
-          Initializing camera...
-        </p>
+        <div id="scannerCameraView">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Point your camera at a QR code to receive a deck
+          </p>
+          <div id="qr-reader" style="width:100%; border-radius:12px; overflow:hidden;"></div>
+          <p id="scannerStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
+            Initializing camera...
+          </p>
+        </div>
+        
+        <div id="scannerManualView" style="display:none;">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Camera not available. Enter the connection link manually:
+          </p>
+          <div class="share-link-box">
+            <input type="text" id="manualP2PUrl" placeholder="Paste the P2P connection link here...">
+            <button class="btn btn-primary" onclick="connectFromManualInput()">Connect</button>
+          </div>
+          <p style="color:var(--text3); font-size:12px; margin-top:12px; line-height:1.5;">
+            💡 <strong>Tip:</strong> For camera access, host this app on GitHub Pages or use HTTPS. 
+            Ask the sender to copy the link and share it with you.
+          </p>
+        </div>
+        
+        <button class="btn btn-ghost btn-full" style="margin-top:16px;" onclick="toggleScannerView()">
+          <span id="toggleScannerText">Can't scan? Enter link manually</span>
+        </button>
       </div>
     </div>
   </div>
@@ -2882,6 +2902,12 @@
     modal.classList.remove('active');
     modal.onclick = null;
     
+    // Reset views
+    document.getElementById('scannerCameraView').style.display = 'block';
+    document.getElementById('scannerManualView').style.display = 'none';
+    document.getElementById('toggleScannerText').textContent = "Can't scan? Enter link manually";
+    document.getElementById('manualP2PUrl').value = '';
+    
     // Stop scanner
     if (html5QrcodeScanner) {
       html5QrcodeScanner.stop().then(() => {
@@ -2895,11 +2921,30 @@
 
   function initScanner() {
     const status = document.getElementById('scannerStatus');
+    const cameraView = document.getElementById('scannerCameraView');
+    const manualView = document.getElementById('scannerManualView');
+    
+    // Check if running on file:// protocol
+    if (window.location.protocol === 'file:') {
+      status.textContent = 'Camera requires HTTPS. Use manual input below.';
+      status.style.color = 'var(--danger)';
+      setTimeout(() => {
+        cameraView.style.display = 'none';
+        manualView.style.display = 'block';
+        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+      }, 2000);
+      return;
+    }
     
     // Check if browser supports camera
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       status.textContent = 'Camera access not supported in this browser';
       status.style.color = 'var(--danger)';
+      setTimeout(() => {
+        cameraView.style.display = 'none';
+        manualView.style.display = 'block';
+        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+      }, 2000);
       return;
     }
     
@@ -2924,7 +2969,76 @@
       status.textContent = 'Camera access denied or not available';
       status.style.color = 'var(--danger)';
       console.error('Scanner error:', err);
+      
+      // Show manual input after error
+      setTimeout(() => {
+        cameraView.style.display = 'none';
+        manualView.style.display = 'block';
+        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+      }, 2000);
     });
+  }
+
+  function toggleScannerView() {
+    const cameraView = document.getElementById('scannerCameraView');
+    const manualView = document.getElementById('scannerManualView');
+    const toggleText = document.getElementById('toggleScannerText');
+    
+    if (cameraView.style.display === 'none') {
+      // Switch to camera view
+      cameraView.style.display = 'block';
+      manualView.style.display = 'none';
+      toggleText.textContent = "Can't scan? Enter link manually";
+      
+      // Try to init camera again
+      if (!html5QrcodeScanner) {
+        initScanner();
+      }
+    } else {
+      // Switch to manual view
+      cameraView.style.display = 'none';
+      manualView.style.display = 'block';
+      toggleText.textContent = 'Use camera instead';
+      
+      // Stop camera if running
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          html5QrcodeScanner.clear();
+          html5QrcodeScanner = null;
+        }).catch(err => {
+          console.log('Error stopping scanner:', err);
+        });
+      }
+    }
+  }
+
+  function connectFromManualInput() {
+    const input = document.getElementById('manualP2PUrl');
+    const url = input.value.trim();
+    
+    if (!url) {
+      alert('Please enter a connection link');
+      return;
+    }
+    
+    // Parse the URL
+    try {
+      const parsedUrl = new URL(url);
+      const receiveId = parsedUrl.searchParams.get('receive');
+      
+      if (receiveId) {
+        // Close scanner modal
+        closeScanner();
+        
+        // Connect to P2P sender
+        connectToP2PSender(receiveId);
+      } else {
+        alert('Invalid connection link. Please check the URL and try again.');
+      }
+    } catch (err) {
+      console.error('Error parsing URL:', err);
+      alert('Invalid URL format. Please check the link and try again.');
+    }
   }
 
   function onScanSuccess(decodedText, decodedResult) {
