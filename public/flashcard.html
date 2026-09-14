@@ -311,6 +311,8 @@
     justify-content: space-between;
     gap: 16px;
     transition: all 0.2s;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
   }
 
   .flashcard-item:hover {
@@ -324,11 +326,17 @@
     font-size: 15px;
     margin-bottom: 6px;
     color: var(--accent);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
   }
 
   .flashcard-back {
     font-size: 14px;
     color: var(--text2);
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    line-height: 1.5;
   }
 
   .flashcard-delete {
@@ -357,7 +365,7 @@
   /* Study Mode - 3D Flip Card */
   .study-card-container {
     perspective: 1000px;
-    height: 320px;
+    min-height: 280px;
     margin: 28px 0;
     cursor: pointer;
   }
@@ -365,7 +373,7 @@
   .study-card-inner {
     position: relative;
     width: 100%;
-    height: 100%;
+    min-height: 280px;
     transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
     transform-style: preserve-3d;
   }
@@ -376,7 +384,10 @@
 
   .study-card-face {
     position: absolute;
-    inset: 0;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
     border-radius: 16px;
@@ -384,9 +395,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 40px;
+    padding: 32px;
     text-align: center;
     box-shadow: var(--shadow-lg);
+    overflow-y: auto;
   }
 
   .study-card-front {
@@ -400,20 +412,14 @@
     transform: rotateY(180deg);
   }
 
-  .study-card-label {
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 1.5px;
-    opacity: 0.8;
-    margin-bottom: 20px;
-    font-weight: 600;
-  }
-
   .study-card-text {
-    font-size: 26px;
+    font-size: 24px;
     font-weight: 600;
-    line-height: 1.4;
-    word-break: break-word;
+    line-height: 1.5;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+    max-width: 100%;
+    overflow-y: auto;
   }
 
   .study-hint {
@@ -514,8 +520,8 @@
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
-    .study-card-text { font-size: 22px; }
-    .study-card-container { height: 280px; }
+    .study-card-text { font-size: 20px; }
+    .study-card-face { padding: 24px; }
     .page-title { font-size: 26px; }
     main { padding: 24px 16px; }
   }
@@ -617,11 +623,9 @@
       <div class="study-card-container" onclick="flipCard()">
         <div class="study-card-inner" id="studyCardInner">
           <div class="study-card-face study-card-front">
-            <div class="study-card-label">Question</div>
             <div class="study-card-text" id="studyFront"></div>
           </div>
           <div class="study-card-face study-card-back">
-            <div class="study-card-label">Answer</div>
             <div class="study-card-text" id="studyBack"></div>
           </div>
         </div>
@@ -942,6 +946,9 @@
     document.getElementById('studyHint').textContent = 'Click the card to reveal the answer';
     document.getElementById('studyRating').style.display = 'none';
 
+    // Sync heights of both faces
+    syncCardHeights();
+
     // Progress
     const progress = ((studyIndex + 1) / deck.cards.length) * 100;
     document.getElementById('progressFill').style.width = progress + '%';
@@ -950,6 +957,28 @@
     // Nav buttons
     document.getElementById('prevBtn').disabled = studyIndex === 0;
     document.getElementById('nextBtn').disabled = studyIndex === deck.cards.length - 1;
+  }
+
+  function syncCardHeights() {
+    const front = document.querySelector('.study-card-front');
+    const back = document.querySelector('.study-card-back');
+    const container = document.getElementById('studyCardInner');
+    
+    // Temporarily make both visible to measure
+    front.style.position = 'relative';
+    back.style.position = 'relative';
+    back.style.transform = 'none';
+    
+    const frontHeight = front.scrollHeight;
+    const backHeight = back.scrollHeight;
+    const maxHeight = Math.max(frontHeight, backHeight, 280);
+    
+    // Reset styles
+    front.style.position = '';
+    back.style.position = '';
+    back.style.transform = '';
+    
+    container.style.height = maxHeight + 'px';
   }
 
   function flipCard() {
