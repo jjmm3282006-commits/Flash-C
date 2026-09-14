@@ -1,0 +1,18 @@
+{
+  "name": "Flashcard Maker",
+  "short_name": "Flashcards",
+  "description": "Create and study flashcards with P2P sharing",
+  "start_url": "/flashcard.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#4299e1",
+  "orientation": "portrait-primary",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
