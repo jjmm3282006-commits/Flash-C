@@ -101,6 +101,35 @@
     gap: 16px;
   }
 
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    background: var(--bg3);
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-btn:hover {
+    background: var(--border);
+    color: var(--accent);
+  }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
   .back-btn {
     background: none;
     border: none;
@@ -960,6 +989,44 @@
     border-top: 1px solid var(--border);
   }
 
+  /* QR Code Styles */
+  .qr-container {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  #qrcode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #qrcode img, #qrcode canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .share-link-box {
+    display: flex;
+    gap: 8px;
+  }
+
+  .share-link-box input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 13px;
+    font-family: monospace;
+  }
+
   /* Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
@@ -987,14 +1054,21 @@
     </button>
     <h1>Flashcard Maker</h1>
   </div>
-  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
-    <svg id="moonIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
-    </svg>
-    <svg id="sunIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
-    </svg>
-  </button>
+  <div class="header-right">
+    <button class="icon-btn" id="shareBtn" onclick="showShareModal()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+      </svg>
+    </button>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <svg id="moonIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+      <svg id="sunIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+    </button>
+  </div>
 </header>
 
 <main>
@@ -1192,9 +1266,36 @@
       </div>
     </div>
   </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content" style="max-width:450px;">
+      <div class="modal-header">
+        <h3>Share Flashcard Maker</h3>
+        <button class="modal-close" onclick="closeShareModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text2); font-size:14px; margin-bottom:20px;">
+          Scan this QR code or copy the link to download the app
+        </p>
+        <div class="qr-container">
+          <div id="qrcode"></div>
+        </div>
+        <div class="share-link-box">
+          <input type="text" id="shareLink" readonly>
+          <button class="btn btn-primary" onclick="copyShareLink()">Copy</button>
+        </div>
+        <p id="copyFeedback" style="color:var(--success); font-size:13px; margin-top:8px; display:none;">Link copied!</p>
+      </div>
+    </div>
+  </div>
 </main>
 
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
 <script>
+  // GitHub repo URL - UPDATE THIS WITH YOUR ACTUAL REPO
+  const GITHUB_REPO_URL = 'https://raw.githubusercontent.com/yourusername/yourrepo/main/flashcard.html';
+  
   // State
   let decks = [];
   let currentDeckId = null;
@@ -2262,14 +2363,81 @@
     if (e.key === 'Escape') {
       const editModal = document.getElementById('editModal');
       const confirmModal = document.getElementById('confirmModal');
+      const shareModal = document.getElementById('shareModal');
       
       if (confirmModal.classList.contains('active')) {
         document.getElementById('confirmCancelBtn').click();
+      } else if (shareModal.classList.contains('active')) {
+        closeShareModal();
       } else if (editModal.classList.contains('active')) {
         closeEditModal();
       }
     }
   });
+
+  // Share Modal Functions
+  function showShareModal() {
+    const modal = document.getElementById('shareModal');
+    const qrContainer = document.getElementById('qrcode');
+    const shareLink = document.getElementById('shareLink');
+    
+    // Set the share link
+    shareLink.value = GITHUB_REPO_URL;
+    
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+    
+    // Generate QR code
+    new QRCode(qrContainer, {
+      text: GITHUB_REPO_URL,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeShareModal();
+      }
+    };
+  }
+
+  function closeShareModal() {
+    const modal = document.getElementById('shareModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    document.getElementById('copyFeedback').style.display = 'none';
+  }
+
+  function copyShareLink() {
+    const shareLink = document.getElementById('shareLink');
+    const feedback = document.getElementById('copyFeedback');
+    
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999); // For mobile
+    
+    try {
+      document.execCommand('copy');
+      feedback.style.display = 'block';
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
+    } catch (err) {
+      // Fallback for modern browsers
+      navigator.clipboard.writeText(shareLink.value).then(() => {
+        feedback.style.display = 'block';
+        setTimeout(() => {
+          feedback.style.display = 'none';
+        }, 2000);
+      });
+    }
+  }
 
   // Start
   init();
