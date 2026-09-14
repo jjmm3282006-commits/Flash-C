@@ -613,6 +613,24 @@
       </form>
     </div>
 
+    <div class="card">
+      <div class="card-label">Bulk Import</div>
+      <p style="font-size:14px; color:var(--text2); margin-bottom:12px;">
+        Paste multiple cards using (question) [answer] format
+      </p>
+      <textarea 
+        id="bulkImportText" 
+        placeholder="(What is 2+2?) [4]
+(The capital of France?) [Paris]
+(H2O is the chemical formula for?) [Water]"
+        style="width:100%; min-height:120px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg2); color:var(--text); outline:none; resize:vertical; font-family:inherit; transition:all 0.2s;"
+        onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(66, 153, 225, 0.1)';"
+        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+      ></textarea>
+      <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="bulkImport()">Import Cards</button>
+      <div id="bulkImportResult" style="margin-top:12px; font-size:14px; display:none;"></div>
+    </div>
+
     <div id="cardsList"></div>
 
     <div id="studySection" style="display:none">
@@ -818,6 +836,64 @@
     deck.cards = deck.cards.filter(c => c.id !== cardId);
     save();
     renderCards();
+  }
+
+  function bulkImport() {
+    const text = document.getElementById('bulkImportText').value.trim();
+    const resultDiv = document.getElementById('bulkImportResult');
+    
+    if (!text) {
+      resultDiv.style.display = 'block';
+      resultDiv.style.color = 'var(--danger)';
+      resultDiv.textContent = 'Please paste some text to import.';
+      return;
+    }
+
+    // Parse (question) [answer] pairs
+    const regex = /\(([^)]+)\)\s*\[([^\]]+)\]/g;
+    const matches = [];
+    let match;
+    
+    while ((match = regex.exec(text)) !== null) {
+      const front = match[1].trim();
+      const back = match[2].trim();
+      if (front && back) {
+        matches.push({ front, back });
+      }
+    }
+
+    if (matches.length === 0) {
+      resultDiv.style.display = 'block';
+      resultDiv.style.color = 'var(--danger)';
+      resultDiv.textContent = 'No valid cards found. Use format: (question) [answer]';
+      return;
+    }
+
+    // Add cards to current deck
+    const deck = getCurrentDeck();
+    matches.forEach(card => {
+      deck.cards.push({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        front: card.front,
+        back: card.back
+      });
+    });
+    
+    save();
+    
+    // Clear input and show success
+    document.getElementById('bulkImportText').value = '';
+    resultDiv.style.display = 'block';
+    resultDiv.style.color = 'var(--success)';
+    resultDiv.textContent = `Successfully imported ${matches.length} card${matches.length !== 1 ? 's' : ''}.`;
+    
+    // Re-render cards list
+    renderCards();
+    
+    // Hide result after 3 seconds
+    setTimeout(() => {
+      resultDiv.style.display = 'none';
+    }, 3000);
   }
 
   function renderCards() {
