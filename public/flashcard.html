@@ -8,42 +8,45 @@
   * { margin: 0; padding: 0; box-sizing: border-box; }
   
   :root {
-    --bg: #f0f4ff;
+    --bg: #fafbfc;
     --bg2: #ffffff;
-    --bg3: #f8fafc;
-    --text: #1e293b;
-    --text2: #64748b;
-    --text3: #94a3b8;
+    --bg3: #f5f7fa;
+    --text: #1a202c;
+    --text2: #4a5568;
+    --text3: #a0aec0;
     --border: #e2e8f0;
-    --accent: #6366f1;
-    --accent2: #8b5cf6;
-    --green: #10b981;
-    --green2: #059669;
-    --red: #ef4444;
-    --red2: #dc2626;
-    --shadow: 0 4px 24px rgba(99,102,241,0.08);
-    --shadow-lg: 0 8px 40px rgba(99,102,241,0.12);
+    --accent: #4299e1;
+    --accent2: #3182ce;
+    --success: #48bb78;
+    --success2: #38a169;
+    --danger: #f56565;
+    --danger2: #e53e3e;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.05);
   }
 
   .dark {
-    --bg: #0f172a;
-    --bg2: #1e293b;
-    --bg3: #334155;
-    --text: #f1f5f9;
-    --text2: #94a3b8;
-    --text3: #64748b;
-    --border: #334155;
-    --shadow: 0 4px 24px rgba(0,0,0,0.3);
-    --shadow-lg: 0 8px 40px rgba(0,0,0,0.4);
+    --bg: #1a202c;
+    --bg2: #2d3748;
+    --bg3: #4a5568;
+    --text: #f7fafc;
+    --text2: #cbd5e0;
+    --text3: #718096;
+    --border: #4a5568;
+    --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.25);
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
     transition: background 0.3s, color 0.3s;
     -webkit-tap-highlight-color: transparent;
+    line-height: 1.6;
   }
 
   /* Header */
@@ -54,110 +57,128 @@
     background: var(--bg2);
     border-bottom: 1px solid var(--border);
     backdrop-filter: blur(12px);
-    padding: 12px 16px;
+    padding: 16px 20px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     transition: background 0.3s;
+    box-shadow: var(--shadow);
   }
 
   .header-left {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
   }
 
   .back-btn {
     background: none;
     border: none;
-    font-size: 20px;
     cursor: pointer;
     padding: 8px;
-    border-radius: 8px;
-    color: var(--text);
-    transition: background 0.2s;
+    border-radius: 6px;
+    color: var(--text2);
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
   }
 
-  .back-btn:hover { background: var(--bg3); }
+  .back-btn:hover { 
+    background: var(--bg3); 
+    color: var(--text);
+  }
+
+  .back-btn svg {
+    width: 20px;
+    height: 20px;
+  }
 
   h1 {
-    font-size: 20px;
-    font-weight: 700;
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-clip: text;
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
   }
 
   .theme-btn {
     background: var(--bg3);
-    border: none;
-    font-size: 18px;
+    border: 1px solid var(--border);
     cursor: pointer;
     padding: 8px 12px;
-    border-radius: 50%;
-    transition: transform 0.2s, background 0.2s;
+    border-radius: 6px;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
   }
 
-  .theme-btn:hover { transform: scale(1.1); }
-  .theme-btn:active { transform: scale(0.95); }
+  .theme-btn:hover { 
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .theme-btn svg {
+    width: 18px;
+    height: 18px;
+  }
 
   /* Main */
   main {
-    max-width: 720px;
+    max-width: 800px;
     margin: 0 auto;
-    padding: 24px 16px;
+    padding: 32px 20px;
   }
 
   .view { display: none; }
   .view.active { display: block; animation: fadeIn 0.3s ease; }
 
   @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(8px); }
+    from { opacity: 0; transform: translateY(6px); }
     to { opacity: 1; transform: translateY(0); }
   }
 
   /* Typography */
   .page-title {
-    font-size: 28px;
-    font-weight: 800;
-    margin-bottom: 4px;
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
   }
 
   .page-subtitle {
-    font-size: 14px;
+    font-size: 15px;
     color: var(--text2);
-    margin-bottom: 24px;
+    margin-bottom: 32px;
   }
 
   /* Cards & Containers */
   .card {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
-    margin-bottom: 16px;
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
     box-shadow: var(--shadow);
-    transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+    transition: all 0.3s;
   }
-
-  .card:hover { box-shadow: var(--shadow-lg); }
 
   /* Inputs */
   input[type="text"] {
     width: 100%;
     padding: 12px 16px;
-    border: 2px solid var(--border);
-    border-radius: 12px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
     font-size: 15px;
-    background: var(--bg3);
+    background: var(--bg2);
     color: var(--text);
     outline: none;
-    transition: border-color 0.2s, background 0.3s;
+    transition: all 0.2s;
+    font-family: inherit;
   }
 
   input[type="text"]:focus {
     border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
   }
 
   input[type="text"]::placeholder { color: var(--text3); }
@@ -166,43 +187,60 @@
   .btn {
     padding: 12px 24px;
     border: none;
-    border-radius: 12px;
+    border-radius: 8px;
     font-size: 15px;
-    font-weight: 600;
+    font-weight: 500;
     cursor: pointer;
-    transition: transform 0.15s, opacity 0.2s;
+    transition: all 0.2s;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 8px;
+    font-family: inherit;
   }
 
-  .btn:active { transform: scale(0.97); }
+  .btn:active { transform: scale(0.98); }
 
   .btn-primary {
-    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    background: var(--accent);
     color: white;
   }
 
-  .btn-primary:hover { opacity: 0.9; }
+  .btn-primary:hover { 
+    background: var(--accent2);
+    box-shadow: var(--shadow-md);
+  }
 
   .btn-success {
-    background: linear-gradient(135deg, var(--green), var(--green2));
+    background: var(--success);
     color: white;
+  }
+
+  .btn-success:hover { 
+    background: var(--success2);
+    box-shadow: var(--shadow-md);
   }
 
   .btn-danger {
-    background: linear-gradient(135deg, var(--red), var(--red2));
+    background: var(--danger);
     color: white;
+  }
+
+  .btn-danger:hover { 
+    background: var(--danger2);
+    box-shadow: var(--shadow-md);
   }
 
   .btn-ghost {
     background: var(--bg3);
-    color: var(--text);
+    color: var(--text2);
     border: 1px solid var(--border);
   }
 
-  .btn-ghost:hover { background: var(--border); }
+  .btn-ghost:hover { 
+    background: var(--border);
+    color: var(--text);
+  }
 
   .btn-full { width: 100%; }
 
@@ -215,8 +253,8 @@
   /* Form Row */
   .form-row {
     display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
+    gap: 12px;
+    margin-bottom: 32px;
   }
 
   .form-row input { flex: 1; }
@@ -224,23 +262,23 @@
   .form-stack {
     display: flex;
     flex-direction: column;
-    gap: 10px;
+    gap: 12px;
   }
 
   /* Deck Grid */
   .deck-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 12px;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
   }
 
   .deck-card {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 16px;
-    padding: 20px;
+    border-radius: 12px;
+    padding: 24px;
     cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s, background 0.3s;
+    transition: all 0.2s;
     position: relative;
     box-shadow: var(--shadow);
   }
@@ -248,55 +286,78 @@
   .deck-card:hover {
     transform: translateY(-2px);
     box-shadow: var(--shadow-lg);
+    border-color: var(--accent);
   }
 
   .deck-card:active { transform: scale(0.98); }
 
-  .deck-emoji { font-size: 32px; margin-bottom: 8px; }
-  .deck-name { font-weight: 700; font-size: 16px; margin-bottom: 4px; }
-  .deck-count { font-size: 13px; color: var(--text2); }
+  .deck-name { 
+    font-weight: 600; 
+    font-size: 17px; 
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+
+  .deck-count { 
+    font-size: 14px; 
+    color: var(--text2);
+  }
 
   .deck-delete {
     position: absolute;
-    top: 8px;
-    right: 8px;
-    background: var(--red);
-    color: white;
-    border: none;
-    width: 28px;
-    height: 28px;
-    border-radius: 50%;
-    font-size: 14px;
+    top: 12px;
+    right: 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text3);
+    width: 32px;
+    height: 32px;
+    border-radius: 6px;
     cursor: pointer;
     opacity: 0;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     display: flex;
     align-items: center;
     justify-content: center;
   }
 
+  .deck-delete:hover {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: white;
+  }
+
   .deck-card:hover .deck-delete { opacity: 1; }
+
+  .deck-delete svg {
+    width: 16px;
+    height: 16px;
+  }
 
   /* Flashcard List */
   .flashcard-item {
     background: var(--bg2);
     border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 16px;
-    margin-bottom: 8px;
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 10px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
-    gap: 12px;
-    transition: background 0.3s;
+    gap: 16px;
+    transition: all 0.2s;
+  }
+
+  .flashcard-item:hover {
+    box-shadow: var(--shadow-md);
   }
 
   .flashcard-content { flex: 1; }
 
   .flashcard-front {
     font-weight: 600;
-    font-size: 14px;
-    margin-bottom: 4px;
+    font-size: 15px;
+    margin-bottom: 6px;
     color: var(--accent);
   }
 
@@ -310,22 +371,32 @@
     border: none;
     color: var(--text3);
     cursor: pointer;
-    padding: 4px 8px;
-    border-radius: 8px;
-    font-size: 16px;
+    padding: 6px;
+    border-radius: 6px;
     opacity: 0;
-    transition: opacity 0.2s, color 0.2s;
+    transition: all 0.2s;
     flex-shrink: 0;
+    display: flex;
+    align-items: center;
   }
 
   .flashcard-item:hover .flashcard-delete { opacity: 1; }
-  .flashcard-delete:hover { color: var(--red); }
+  
+  .flashcard-delete:hover { 
+    color: var(--danger);
+    background: var(--bg3);
+  }
+
+  .flashcard-delete svg {
+    width: 16px;
+    height: 16px;
+  }
 
   /* Study Mode - 3D Flip Card */
   .study-card-container {
     perspective: 1000px;
-    height: 300px;
-    margin: 24px 0;
+    height: 320px;
+    margin: 28px 0;
     cursor: pointer;
   }
 
@@ -346,76 +417,76 @@
     inset: 0;
     backface-visibility: hidden;
     -webkit-backface-visibility: hidden;
-    border-radius: 20px;
+    border-radius: 16px;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 32px;
+    padding: 40px;
     text-align: center;
     box-shadow: var(--shadow-lg);
   }
 
   .study-card-front {
-    background: linear-gradient(135deg, #6366f1, #8b5cf6);
+    background: linear-gradient(135deg, #4299e1, #3182ce);
     color: white;
   }
 
   .study-card-back {
-    background: linear-gradient(135deg, #10b981, #059669);
+    background: linear-gradient(135deg, #48bb78, #38a169);
     color: white;
     transform: rotateY(180deg);
   }
 
   .study-card-label {
-    font-size: 11px;
+    font-size: 12px;
     text-transform: uppercase;
-    letter-spacing: 2px;
-    opacity: 0.7;
-    margin-bottom: 16px;
+    letter-spacing: 1.5px;
+    opacity: 0.8;
+    margin-bottom: 20px;
     font-weight: 600;
   }
 
   .study-card-text {
-    font-size: 24px;
-    font-weight: 700;
+    font-size: 26px;
+    font-weight: 600;
     line-height: 1.4;
     word-break: break-word;
   }
 
   .study-hint {
     text-align: center;
-    font-size: 13px;
+    font-size: 14px;
     color: var(--text3);
-    margin-bottom: 16px;
+    margin-bottom: 20px;
   }
 
   /* Progress Bar */
   .progress-container {
     display: flex;
     align-items: center;
-    gap: 12px;
-    margin-bottom: 8px;
+    gap: 16px;
+    margin-bottom: 12px;
   }
 
   .progress-bar {
     flex: 1;
-    height: 8px;
+    height: 6px;
     background: var(--bg3);
-    border-radius: 4px;
+    border-radius: 3px;
     overflow: hidden;
   }
 
   .progress-fill {
     height: 100%;
-    background: linear-gradient(90deg, var(--accent), var(--accent2));
-    border-radius: 4px;
+    background: var(--accent);
+    border-radius: 3px;
     transition: width 0.4s ease;
   }
 
   .progress-text {
-    font-size: 13px;
-    font-weight: 600;
+    font-size: 14px;
+    font-weight: 500;
     color: var(--text2);
     white-space: nowrap;
   }
@@ -423,64 +494,68 @@
   /* Study Controls */
   .study-controls {
     display: flex;
-    gap: 8px;
-    margin-top: 16px;
+    gap: 12px;
+    margin-top: 20px;
   }
 
   .study-controls .btn { flex: 1; }
 
   .study-result {
     text-align: center;
-    padding: 40px 20px;
+    padding: 48px 24px;
   }
 
-  .study-result-emoji { font-size: 64px; margin-bottom: 16px; }
-  .study-result-title { font-size: 24px; font-weight: 800; margin-bottom: 8px; }
-  .study-result-text { color: var(--text2); margin-bottom: 24px; }
+  .study-result-title { 
+    font-size: 28px; 
+    font-weight: 700; 
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .study-result-text { 
+    color: var(--text2); 
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
 
   /* Empty State */
   .empty-state {
     text-align: center;
-    padding: 48px 20px;
+    padding: 64px 20px;
     color: var(--text3);
   }
 
-  .empty-state-emoji { font-size: 56px; margin-bottom: 12px; }
-  .empty-state-text { font-size: 15px; }
+  .empty-state-text { 
+    font-size: 16px;
+    line-height: 1.6;
+  }
 
   /* Section Label */
   .section-label {
-    font-size: 12px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text3);
-    margin-bottom: 12px;
-    margin-top: 24px;
-  }
-
-  /* Stats Row */
-  .stats-row {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 16px;
-  }
-
-  .stat-badge {
-    padding: 4px 12px;
-    border-radius: 20px;
-    font-size: 12px;
+    font-size: 13px;
     font-weight: 600;
-    background: var(--bg3);
-    color: var(--text2);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    margin-bottom: 16px;
+    margin-top: 32px;
+  }
+
+  /* Card Label */
+  .card-label {
+    font-weight: 600;
+    margin-bottom: 16px;
+    font-size: 15px;
+    color: var(--text);
   }
 
   /* Responsive */
-  @media (max-width: 480px) {
+  @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
-    .study-card-text { font-size: 20px; }
-    .study-card-container { height: 250px; }
-    .page-title { font-size: 24px; }
+    .study-card-text { font-size: 22px; }
+    .study-card-container { height: 280px; }
+    .page-title { font-size: 26px; }
+    main { padding: 24px 16px; }
   }
 
   /* iOS fix */
@@ -493,21 +568,32 @@
 
 <header>
   <div class="header-left">
-    <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">←</button>
-    <h1>📇 Flashcard Maker</h1>
+    <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1>Flashcard Maker</h1>
   </div>
-  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">🌙</button>
+  <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+    <svg id="moonIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+    </svg>
+    <svg id="sunIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+    </svg>
+  </button>
 </header>
 
 <main>
   <!-- DECKS VIEW -->
   <div class="view active" id="decksView">
     <h2 class="page-title">Your Decks</h2>
-    <p class="page-subtitle">Create flashcard decks to study anything</p>
+    <p class="page-subtitle">Create flashcard decks to organize and study your material</p>
 
     <form class="form-row" onsubmit="createDeck(event)">
-      <input type="text" id="newDeckName" placeholder="New deck name..." autocomplete="off">
-      <button type="submit" class="btn btn-primary">Create</button>
+      <input type="text" id="newDeckName" placeholder="Enter deck name..." autocomplete="off">
+      <button type="submit" class="btn btn-primary">Create Deck</button>
     </form>
 
     <div id="decksList"></div>
@@ -519,19 +605,19 @@
     <p class="page-subtitle" id="cardsDeckCount"></p>
 
     <div class="card">
-      <div style="font-weight:700; margin-bottom:12px; font-size:14px;">Add New Card</div>
+      <div class="card-label">Add New Card</div>
       <form class="form-stack" onsubmit="addCard(event)">
-        <input type="text" id="cardFront" placeholder="Front (question / term)..." autocomplete="off">
-        <input type="text" id="cardBack" placeholder="Back (answer / definition)..." autocomplete="off">
-        <button type="submit" class="btn btn-primary btn-full">+ Add Card</button>
+        <input type="text" id="cardFront" placeholder="Front (question or term)..." autocomplete="off">
+        <input type="text" id="cardBack" placeholder="Back (answer or definition)..." autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-full">Add Card</button>
       </form>
     </div>
 
     <div id="cardsList"></div>
 
     <div id="studySection" style="display:none">
-      <button class="btn btn-success btn-full" style="padding:16px; font-size:17px; margin-top:8px;" onclick="startStudy()">
-        🎯 Start Studying
+      <button class="btn btn-success btn-full" style="padding:16px; font-size:16px; margin-top:12px;" onclick="startStudy()">
+        Start Studying
       </button>
     </div>
   </div>
@@ -561,25 +647,24 @@
         </div>
       </div>
 
-      <p class="study-hint" id="studyHint">Tap the card to reveal the answer</p>
+      <p class="study-hint" id="studyHint">Click the card to reveal the answer</p>
 
       <div class="study-controls" id="studyRating" style="display:none">
-        <button class="btn btn-danger" onclick="rateCard(false)">❌ Still Learning</button>
-        <button class="btn btn-success" onclick="rateCard(true)">✅ Got It!</button>
+        <button class="btn btn-danger" onclick="rateCard(false)">Still Learning</button>
+        <button class="btn btn-success" onclick="rateCard(true)">Got It</button>
       </div>
 
       <div class="study-controls">
-        <button class="btn btn-ghost" id="prevBtn" onclick="prevCard()">← Previous</button>
-        <button class="btn btn-ghost" id="nextBtn" onclick="nextCard()">Next →</button>
+        <button class="btn btn-ghost" id="prevBtn" onclick="prevCard()">Previous</button>
+        <button class="btn btn-ghost" id="nextBtn" onclick="nextCard()">Next</button>
       </div>
     </div>
 
     <div id="studyResult" style="display:none">
       <div class="study-result">
-        <div class="study-result-emoji">🎉</div>
-        <div class="study-result-title">Session Complete!</div>
+        <div class="study-result-title">Session Complete</div>
         <div class="study-result-text" id="resultText"></div>
-        <button class="btn btn-primary" onclick="restartStudy()">🔄 Study Again</button>
+        <button class="btn btn-primary" onclick="restartStudy()">Study Again</button>
       </div>
     </div>
   </div>
@@ -621,7 +706,8 @@
 
   function applyTheme() {
     document.body.classList.toggle('dark', darkMode);
-    document.getElementById('themeBtn').textContent = darkMode ? '☀️' : '🌙';
+    document.getElementById('moonIcon').style.display = darkMode ? 'none' : 'block';
+    document.getElementById('sunIcon').style.display = darkMode ? 'block' : 'none';
   }
 
   // Navigation
@@ -630,7 +716,7 @@
     document.getElementById(viewId).classList.add('active');
     
     const backBtn = document.getElementById('backBtn');
-    backBtn.style.display = viewId === 'decksView' ? 'none' : 'block';
+    backBtn.style.display = viewId === 'decksView' ? 'none' : 'flex';
   }
 
   function goBack() {
@@ -684,18 +770,18 @@
     if (decks.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-emoji">📚</div>
-          <div class="empty-state-text">No decks yet. Create your first one above!</div>
+          <div class="empty-state-text">No decks yet. Create your first one above.</div>
         </div>`;
       return;
     }
 
-    const emojis = ['📖', '🧠', '📝', '🎓', '💡', '🔬', '🌍', '🎨', '🎵', '📐'];
-    
-    container.innerHTML = '<div class="deck-grid">' + decks.map((deck, i) => `
+    container.innerHTML = '<div class="deck-grid">' + decks.map(deck => `
       <div class="deck-card" onclick="openDeck('${deck.id}')">
-        <button class="deck-delete" onclick="deleteDeck('${deck.id}', event)" title="Delete deck">×</button>
-        <div class="deck-emoji">${emojis[i % emojis.length]}</div>
+        <button class="deck-delete" onclick="deleteDeck('${deck.id}', event)" title="Delete deck">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        </button>
         <div class="deck-name">${escapeHtml(deck.name)}</div>
         <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
       </div>
@@ -748,8 +834,7 @@
     if (deck.cards.length === 0) {
       container.innerHTML = `
         <div class="empty-state">
-          <div class="empty-state-emoji">🃏</div>
-          <div class="empty-state-text">No cards yet. Add your first card above!</div>
+          <div class="empty-state-text">No cards yet. Add your first card above.</div>
         </div>`;
       studySection.style.display = 'none';
       return;
@@ -758,16 +843,20 @@
     container.innerHTML = '<div class="section-label">Cards</div>' + deck.cards.map(card => `
       <div class="flashcard-item">
         <div class="flashcard-content">
-          <div class="flashcard-front">Q: ${escapeHtml(card.front)}</div>
-          <div class="flashcard-back">A: ${escapeHtml(card.back)}</div>
+          <div class="flashcard-front">${escapeHtml(card.front)}</div>
+          <div class="flashcard-back">${escapeHtml(card.back)}</div>
         </div>
-        <button class="flashcard-delete" onclick="deleteCard('${card.id}')" title="Delete card">🗑️</button>
+        <button class="flashcard-delete" onclick="deleteCard('${card.id}')" title="Delete card">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+          </svg>
+        </button>
       </div>
     `).join('');
 
     studySection.style.display = 'block';
     studySection.querySelector('button').textContent = 
-      `🎯 Start Studying (${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''})`;
+      `Start Studying (${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''})`;
   }
 
   // Study Mode
@@ -801,7 +890,7 @@
     // Reset flip
     studyFlipped = false;
     document.getElementById('studyCardInner').classList.remove('flipped');
-    document.getElementById('studyHint').textContent = 'Tap the card to reveal the answer';
+    document.getElementById('studyHint').textContent = 'Click the card to reveal the answer';
     document.getElementById('studyRating').style.display = 'none';
 
     // Progress
@@ -822,7 +911,7 @@
       document.getElementById('studyHint').textContent = 'How well did you know this?';
       document.getElementById('studyRating').style.display = 'flex';
     } else {
-      document.getElementById('studyHint').textContent = 'Tap the card to reveal the answer';
+      document.getElementById('studyHint').textContent = 'Click the card to reveal the answer';
       document.getElementById('studyRating').style.display = 'none';
     }
   }
