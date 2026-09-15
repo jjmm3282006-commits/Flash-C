@@ -1768,6 +1768,23 @@
     renderDecks();
   }
 
+  async function renameDeck(id) {
+    const deck = decks.find(d => d.id === id);
+    if (!deck) return;
+
+    const newName = await showInput(
+      'Rename Deck',
+      'Enter a new name for this deck:',
+      deck.name
+    );
+
+    if (!newName || !newName.trim()) return;
+
+    deck.name = newName.trim();
+    save();
+    renderDecks();
+  }
+
   function openDeck(id) {
     currentDeckId = id;
     currentFilter = 'all';
@@ -1797,7 +1814,10 @@
           <div class="deck-name">${escapeHtml(deck.name)}</div>
           <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
         </div>
-        <button class="btn btn-ghost deck-delete-btn" data-deck-id="${deck.id}" style="margin-top:12px; width:100%; padding:8px; font-size:13px; color:var(--danger);">Delete</button>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn btn-ghost deck-edit-btn" data-deck-id="${deck.id}" style="flex:1; padding:8px; font-size:13px;">Rename</button>
+          <button class="btn btn-ghost deck-delete-btn" data-deck-id="${deck.id}" style="flex:1; padding:8px; font-size:13px; color:var(--danger);">Delete</button>
+        </div>
       </div>
     `).join('') + '</div>';
 
@@ -1812,6 +1832,13 @@
       el.addEventListener('click', function(e) {
         e.stopPropagation();
         deleteDeck(this.dataset.deckId);
+      });
+    });
+
+    document.querySelectorAll('.deck-edit-btn').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        renameDeck(this.dataset.deckId);
       });
     });
   }
