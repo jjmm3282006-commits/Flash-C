@@ -2589,11 +2589,19 @@
   async function bulkAddTag() {
     if (selectedCardIds.size === 0) return;
     
-    const tagName = await showInput('Add Tag', 'Enter tag name to add to selected cards:', 'e.g., math, chapter1');
-    if (!tagName) return;
-    
     const deck = getCurrentDeck();
     if (!deck) return;
+    
+    // Get all existing tags from the deck
+    const existingTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => existingTags.add(tag));
+      }
+    });
+    
+    const tagName = await showTagInput('Add Tag', 'Select an existing tag or create a new one:', Array.from(existingTags).sort());
+    if (!tagName) return;
     
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id)) {
@@ -2866,6 +2874,98 @@
       inputEl.placeholder = placeholder;
       
       modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        cancelBtn.removeEventListener('click', onCancel);
+        okBtn.removeEventListener('click', onOk);
+        inputEl.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = () => {
+        const value = inputEl.value.trim();
+        cleanup();
+        resolve(value || null);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Enter') {
+          onOk();
+        } else if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      inputEl.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Tag Input Modal with dropdown
+  function showTagInput(title, message, existingTags = []) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Type new tag or select below';
+      
+      // Create dropdown for existing tags
+      let selectHtml = '';
+      if (existingTags.length > 0) {
+        selectHtml = `
+          <div style="margin-top:12px;">
+            <label style="display:block; font-size:12px; color:var(--text2); margin-bottom:6px;">Existing tags:</label>
+            <select id="tagSelectDropdown" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg3); color:var(--text); font-size:14px; outline:none; cursor:pointer; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              <option value="">-- Select existing tag --</option>
+              ${existingTags.map(tag => `<option value="${tag}">${tag}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else {
+        selectHtml = `
+          <div style="margin-top:12px; padding:12px; background:var(--bg3); border-radius:6px; text-align:center;">
+            <p style="color:var(--text3); font-size:13px; margin:0;">No existing tags in this deck</p>
+          </div>
+        `;
+      }
+      
+      messageEl.innerHTML = message + selectHtml;
+      
+      modal.classList.add('active');
+      
+      // Setup dropdown behavior
+      const selectEl = document.getElementById('tagSelectDropdown');
+      if (selectEl) {
+        selectEl.addEventListener('change', function() {
+          if (this.value) {
+            inputEl.value = this.value;
+          }
+        });
+      }
       
       // Focus input after modal opens
       setTimeout(() => inputEl.focus(), 100);
