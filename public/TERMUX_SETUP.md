@@ -26,7 +26,15 @@ pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd 
 - Installs Python and download tools
 - Downloads the flashcard app
 - Extracts the files from the public folder
-- Starts the web server
+- Starts the web server with auto-update enabled
+
+**Note:** The server will automatically check for updates every time it starts. You'll see messages like:
+```
+Current version: abc1234
+Latest version: def5678
+New version available! Updating...
+Update complete!
+```
 
 You should see:
 ```
@@ -92,7 +100,29 @@ To access the app from another device on the same WiFi network:
 
 ## Updating the App
 
-To get the latest version:
+**Good news!** The app now updates automatically when you start the server. Just run:
+```bash
+cd ~/flashcard
+python server.py
+```
+
+The server will check for updates and apply them automatically if available.
+
+### Manual Update Options
+
+If you want to force an update check:
+```bash
+python server.py --force-update
+```
+
+If you want to skip the auto-update:
+```bash
+python server.py --no-update
+```
+
+### Manual Update (Fallback)
+
+If auto-update fails, you can manually update:
 ```bash
 cd ~/flashcard
 rm -rf *
