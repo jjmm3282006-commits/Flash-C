@@ -1,202 +1,176 @@
-# Flashcard Maker - Termux Setup Guide
+# Flashcard Maker - Android Setup Guide
 
-## Quick Setup for Android (Termux) - No Root Required
+## What is Termux?
+Termux is a terminal app for Android that lets you run a local web server on your phone. This allows the flashcard app to access your camera for QR scanning. **No root required!**
 
-### Method 1: Download Files Directly in Termux (Recommended)
+---
 
-#### 1. Install Termux
-Download from F-Droid or GitHub: https://github.com/termux/termux-app
+## Quick Start (Easiest Method)
 
-#### 2. Install Required Packages
+### Step 1: Install Termux
+Download Termux from one of these sources:
+- **F-Droid** (recommended): https://f-droid.org/packages/com.termux/
+- **GitHub**: https://github.com/termux/termux-app/releases
+
+⚠️ **Don't use the Play Store version** - it's outdated and won't work properly.
+
+### Step 2: Open Termux and Run This Command
+Copy this entire command and paste it into Termux:
+
 ```bash
-pkg update
-pkg install python wget -y
+pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && mv Flash-C-cross-device-web-app-development-7ebac/* . && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
 ```
 
-#### 3. Create Flashcard Directory
-```bash
-mkdir -p ~/flashcard
-cd ~/flashcard
+**What this does:**
+- Updates Termux packages
+- Installs Python and download tools
+- Downloads the flashcard app
+- Extracts the files
+- Starts the web server
+
+You should see:
+```
+Starting server on http://localhost:8000
+Open your browser to: http://localhost:8000/flashcard.html
+Press Ctrl+C to stop the server
 ```
 
-#### 4. Download the Files
-Download the complete app package:
-```bash
-wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip
-unzip cross-device-web-app-development-7ebac.zip
-mv Flash-C-cross-device-web-app-development-7ebac/* .
-rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip
-```
-
-**OR** Download individual files:
-```bash
-wget https://raw.githubusercontent.com/jjmm3282006-commits/Flash-C/cross-device-web-app-development-7ebac/flashcard.html
-wget https://raw.githubusercontent.com/jjmm3282006-commits/Flash-C/cross-device-web-app-development-7ebac/server.py
-```
-
-#### 5. Make Server Executable
-```bash
-chmod +x server.py
-```
-
-#### 6. Start the Server
-```bash
-python server.py
-```
-
-#### 7. Open in Browser
-Open Chrome and go to:
+### Step 3: Open Your Browser
+Open Chrome (or any browser) and go to:
 ```
 http://localhost:8000/flashcard.html
 ```
 
-The camera will now work for QR scanning!
+✅ **Done!** The app is now running and the camera works for QR scanning!
 
 ---
 
-### Method 2: Use Shared Storage (Access Downloads Folder)
+## How to Use the App
 
-#### 1. Grant Storage Permission
+### Starting the Server
+After the first setup, you only need to run:
 ```bash
-termux-setup-storage
-```
-Tap "Allow" when prompted.
-
-#### 2. Navigate to Downloads
-```bash
-cd ~/storage/downloads
-```
-
-#### 3. Create Flashcard Folder
-```bash
-mkdir flashcard
-cd flashcard
-```
-
-#### 4. Copy Your Files
-Now you can copy `flashcard.html` and `server.py` from your phone's Downloads folder to this location using any file manager.
-
-#### 5. Start the Server
-```bash
-python server.py
-```
-
-#### 6. Open in Browser
-```
-http://localhost:8000/flashcard.html
-```
-
----
-
-### Method 3: Create Files Manually in Termux
-
-If you can't download the files, you can create them directly:
-
-#### 1. Create Directory
-```bash
-mkdir -p ~/flashcard
 cd ~/flashcard
-```
-
-#### 2. Create server.py
-```bash
-cat > server.py << 'EOF'
-#!/usr/bin/env python3
-import http.server
-import socketserver
-import os
-import sys
-
-PORT = 8000
-
-class Handler(http.server.SimpleHTTPRequestHandler):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, directory=os.path.dirname(os.path.abspath(__file__)), **kwargs)
-
-print(f"Starting server on http://localhost:{PORT}")
-print(f"Open your browser to: http://localhost:{PORT}/flashcard.html")
-print("Press Ctrl+C to stop the server")
-
-with socketserver.TCPServer(("", PORT), Handler) as httpd:
-    try:
-        httpd.serve_forever()
-    except KeyboardInterrupt:
-        print("\nServer stopped")
-        sys.exit(0)
-EOF
-```
-
-#### 3. Create flashcard.html
-You'll need to copy the entire flashcard.html content. Use:
-```bash
-nano flashcard.html
-```
-Then paste the entire HTML content, save (Ctrl+O, Enter), and exit (Ctrl+X).
-
-#### 4. Start the Server
-```bash
 python server.py
 ```
 
----
+### Stopping the Server
+Press `Ctrl+C` in the Termux terminal.
 
-## One-Line Setup (Copy & Paste)
-
-**With existing files:**
-```bash
-pkg update && pkg install python -y && python server.py
-```
-
-**Download and run:**
-```bash
-pkg update && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && mv Flash-C-cross-device-web-app-development-7ebac/* . && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
-```
-
-## Stop the Server
-Press `Ctrl+C` in the Termux terminal
-
-## Keep Server Running
-To keep the server running even when you switch apps:
+### Keeping the Server Running
+To keep the server running when you switch to other apps:
 ```bash
 termux-wake-lock
+cd ~/flashcard
 python server.py
 ```
 
-To release the wake lock when done:
+To stop the wake lock later:
 ```bash
 termux-wake-unlock
 ```
 
-## Access from Other Devices
-To access from another device on the same network:
-1. Find your phone's IP: `ifconfig`
-2. Use: `http://YOUR_IP:8000/flashcard.html`
+---
+
+## Sharing with Other Devices
+
+To access the app from another device on the same WiFi network:
+
+1. Find your phone's IP address:
+   ```bash
+   ifconfig
+   ```
+   Look for `wlan0` and find the `inet` address (like `192.168.1.100`)
+
+2. On the other device, open a browser and go to:
+   ```
+   http://192.168.1.100:8000/flashcard.html
+   ```
+   (Replace with your actual IP address)
+
+---
+
+## Updating the App
+
+To get the latest version:
+```bash
+cd ~/flashcard
+rm -rf *
+wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip
+unzip cross-device-web-app-development-7ebac.zip
+mv Flash-C-cross-device-web-app-development-7ebac/* .
+rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip
+chmod +x server.py
+python server.py
+```
+
+---
 
 ## Troubleshooting
 
-**Port already in use?**
-Change the port in `server.py`:
-```python
-PORT = 8080  # or any other port
-```
+### "Port 8000 already in use"
+The server is already running. Either:
+- Stop it first with `Ctrl+C`, then start again
+- Or use a different port by editing `server.py` and changing `PORT = 8000` to `PORT = 8080`
 
-**Can't access files?**
-Make sure you're in the correct directory:
+### "wget: command not found"
+Run: `pkg install wget -y`
+
+### "python: command not found"
+Run: `pkg install python -y`
+
+### "unzip: command not found"
+Run: `pkg install unzip -y`
+
+### Camera still not working
+Make sure you're accessing via `http://localhost:8000/flashcard.html` and NOT opening the HTML file directly. The camera only works when served through the local server.
+
+### "Permission denied"
+Run: `chmod +x server.py`
+
+### Can't find the files
+Check you're in the right folder:
 ```bash
-pwd  # Check current directory
-ls   # List files
+cd ~/flashcard
+ls
 ```
+You should see `flashcard.html` and `server.py`
 
-**Camera still not working?**
-Make sure you're using `http://localhost:8000` not `file://`
+---
 
-**Permission denied?**
-```bash
-chmod +x server.py
-```
+## Alternative: Manual File Transfer
 
-**Can't find files after termux-setup-storage?**
-```bash
-ls ~/storage/downloads/
-```
-Make sure files are actually in your Downloads folder.
+If you prefer to download files separately:
+
+1. Download these files to your phone's Downloads folder:
+   - `flashcard.html`
+   - `server.py`
+
+2. In Termux, run:
+   ```bash
+   termux-setup-storage
+   ```
+   (Tap "Allow" when prompted)
+
+3. Copy the files:
+   ```bash
+   mkdir -p ~/flashcard
+   cd ~/flashcard
+   cp ~/storage/downloads/flashcard.html .
+   cp ~/storage/downloads/server.py .
+   chmod +x server.py
+   python server.py
+   ```
+
+4. Open: `http://localhost:8000/flashcard.html`
+
+---
+
+## Need Help?
+
+If you're stuck, here's what to check:
+1. ✅ Termux is installed from F-Droid or GitHub (not Play Store)
+2. ✅ You ran the full setup command
+3. ✅ You see "Starting server on http://localhost:8000"
+4. ✅ You're opening `http://localhost:8000/flashcard.html` in your browser
+5. ✅ You granted camera permission when prompted
