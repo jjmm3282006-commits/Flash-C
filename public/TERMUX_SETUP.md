@@ -18,14 +18,14 @@ Download Termux from one of these sources:
 Copy this entire command and paste it into Termux:
 
 ```bash
-pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && mv Flash-C-cross-device-web-app-development-7ebac/* . && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
+pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && cd Flash-C-cross-device-web-app-development-7ebac/public && mv * ../../ && cd ../../ && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
 ```
 
 **What this does:**
 - Updates Termux packages
 - Installs Python and download tools
 - Downloads the flashcard app
-- Extracts the files
+- Extracts the files from the public folder
 - Starts the web server
 
 You should see:
@@ -98,7 +98,9 @@ cd ~/flashcard
 rm -rf *
 wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip
 unzip cross-device-web-app-development-7ebac.zip
-mv Flash-C-cross-device-web-app-development-7ebac/* .
+cd Flash-C-cross-device-web-app-development-7ebac/public
+mv * ../../
+cd ../../
 rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip
 chmod +x server.py
 python server.py
@@ -136,6 +138,18 @@ ls
 ```
 You should see `flashcard.html` and `server.py`
 
+### "chmod: cannot access 'server.py': No such file or directory"
+This means the files are in a subdirectory. The app files are in the `public/` folder of the repository. Run this to fix it:
+```bash
+cd ~/flashcard
+cd Flash-C-cross-device-web-app-development-7ebac/public
+mv * ../../
+cd ../../
+rm -rf Flash-C-cross-device-web-app-development-7ebac
+chmod +x server.py
+python server.py
+```
+
 ---
 
 ## Alternative: Manual File Transfer
@@ -143,8 +157,8 @@ You should see `flashcard.html` and `server.py`
 If you prefer to download files separately:
 
 1. Download these files to your phone's Downloads folder:
-   - `flashcard.html`
-   - `server.py`
+   - `flashcard.html` (from the `public/` folder in the repo)
+   - `server.py` (from the `public/` folder in the repo)
 
 2. In Termux, run:
    ```bash
