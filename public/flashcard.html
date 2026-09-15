@@ -2636,7 +2636,7 @@
       return;
     }
     
-    const tagName = await showInput('Remove Tag', `Enter tag name to remove from selected cards.\n\nAvailable tags: ${Array.from(tagsInSelection).join(', ')}`, 'Tag name');
+    const tagName = await showTagRemovalModal('Remove Tag', 'Select a tag to remove from selected cards:', Array.from(tagsInSelection).sort());
     if (!tagName) return;
     
     deck.cards.forEach(card => {
@@ -3006,6 +3006,101 @@
       cancelBtn.addEventListener('click', onCancel);
       okBtn.addEventListener('click', onOk);
       inputEl.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Tag Removal Modal with search and live list
+  function showTagRemovalModal(title, message, availableTags = []) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Search tags...';
+      
+      // Create searchable list
+      const listHtml = `
+        <div style="margin-top:12px;">
+          <div id="tagSearchList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg2);">
+            ${availableTags.length > 0 ? availableTags.map(tag => `
+              <div class="tag-list-item" data-tag="${tag}" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'" onclick="document.getElementById('inputModalField').value='${tag}'; document.querySelectorAll('.tag-list-item').forEach(el => el.style.background='var(--bg2)'); this.style.background='var(--accent)'; this.style.color='white';">
+                ${tag}
+              </div>
+            `).join('') : '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">No tags available</div>'}
+          </div>
+        </div>
+      `;
+      
+      messageEl.innerHTML = message + listHtml;
+      
+      // Hide the OK button since selection is immediate
+      okBtn.style.display = 'none';
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      // Setup search filtering
+      const searchInput = inputEl;
+      const tagList = document.getElementById('tagSearchList');
+      
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const items = tagList.querySelectorAll('.tag-list-item');
+        
+        items.forEach(item => {
+          const tag = item.getAttribute('data-tag').toLowerCase();
+          if (tag.includes(searchTerm)) {
+            item.style.display = 'block';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        okBtn.style.display = '';
+        cancelBtn.removeEventListener('click', onCancel);
+        searchInput.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+        } else if (e.key === 'Enter') {
+          // Select first visible tag
+          const visibleItems = Array.from(tagList.querySelectorAll('.tag-list-item')).filter(item => item.style.display !== 'none');
+          if (visibleItems.length > 0) {
+            const tag = visibleItems[0].getAttribute('data-tag');
+            cleanup();
+            resolve(tag);
+          }
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      searchInput.addEventListener('keydown', onKeydown);
       modal.addEventListener('click', onBackdropClick);
     });
   }
