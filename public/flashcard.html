@@ -2636,12 +2636,13 @@
       return;
     }
     
-    const tagName = await showTagRemovalModal('Remove Tag', 'Select a tag to remove from selected cards:', Array.from(tagsInSelection).sort());
-    if (!tagName) return;
+    const tagsToRemove = await showTagRemovalModal('Remove Tags', 'Select tags to remove from selected cards:', Array.from(tagsInSelection).sort());
+    if (!tagsToRemove || tagsToRemove.length === 0) return;
     
+    // Remove all selected tags from all selected cards
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id) && card.tags) {
-        card.tags = card.tags.filter(t => t !== tagName);
+        card.tags = card.tags.filter(t => !tagsToRemove.includes(t));
       }
     });
     
@@ -3025,23 +3026,26 @@
       inputEl.value = '';
       inputEl.placeholder = 'Search tags...';
       
-      // Create searchable list
+      // Create searchable list with checkboxes
       const listHtml = `
         <div style="margin-top:12px;">
           <div id="tagSearchList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg2);">
             ${availableTags.length > 0 ? availableTags.map(tag => `
-              <div class="tag-list-item" data-tag="${tag}" style="padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'" onclick="handleTagRemovalClick('${tag}')">
-                ${tag}
-              </div>
+              <label class="tag-list-item" data-tag="${tag}" style="display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+                <input type="checkbox" class="tag-checkbox" value="${tag}" style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+                <span>${tag}</span>
+              </label>
             `).join('') : '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">No tags available</div>'}
           </div>
+          <div id="selectedTagsCount" style="margin-top:8px; font-size:12px; color:var(--text3);">0 tags selected</div>
         </div>
       `;
       
       messageEl.innerHTML = message + listHtml;
       
-      // Hide the OK button since selection is immediate
-      okBtn.style.display = 'none';
+      // Change OK button to "Remove Selected"
+      okBtn.textContent = 'Remove Selected';
+      okBtn.className = 'btn btn-danger';
       
       modal.classList.add('active');
       
@@ -3051,6 +3055,7 @@
       // Setup search filtering
       const searchInput = inputEl;
       const tagList = document.getElementById('tagSearchList');
+      const countDisplay = document.getElementById('selectedTagsCount');
       
       searchInput.addEventListener('input', function() {
         const searchTerm = this.value.toLowerCase();
@@ -3059,26 +3064,31 @@
         items.forEach(item => {
           const tag = item.getAttribute('data-tag').toLowerCase();
           if (tag.includes(searchTerm)) {
-            item.style.display = 'block';
+            item.style.display = 'flex';
           } else {
             item.style.display = 'none';
           }
         });
       });
       
-      // Handle tag click - immediately remove
-      window.handleTagRemovalClick = function(tag) {
-        cleanup();
-        resolve(tag);
-      };
+      // Track checkbox changes
+      const checkboxes = tagList.querySelectorAll('.tag-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+      
+      function updateSelectedCount() {
+        const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
+        countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+      }
       
       const cleanup = () => {
         modal.classList.remove('active');
-        okBtn.style.display = '';
+        okBtn.textContent = 'Confirm';
+        okBtn.className = 'btn btn-primary';
         cancelBtn.removeEventListener('click', onCancel);
         searchInput.removeEventListener('keydown', onKeydown);
         modal.removeEventListener('click', onBackdropClick);
-        delete window.handleTagRemovalClick;
       };
       
       const onCancel = () => {
@@ -3086,17 +3096,32 @@
         resolve(null);
       };
       
+      const onOk = async () => {
+        const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        
+        if (selectedTags.length === 0) {
+          alert('Please select at least one tag to remove.');
+          return;
+        }
+        
+        // Show confirmation modal
+        const confirmed = await showConfirm(
+          'Remove Tags',
+          `Are you sure you want to remove ${selectedTags.length} tag${selectedTags.length !== 1 ? 's' : ''} (${selectedTags.join(', ')}) from the selected cards? This action cannot be undone.`,
+          'Remove Tags'
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+        
+        cleanup();
+        resolve(selectedTags);
+      };
+      
       const onKeydown = (e) => {
         if (e.key === 'Escape') {
           onCancel();
-        } else if (e.key === 'Enter') {
-          // Select first visible tag
-          const visibleItems = Array.from(tagList.querySelectorAll('.tag-list-item')).filter(item => item.style.display !== 'none');
-          if (visibleItems.length > 0) {
-            const tag = visibleItems[0].getAttribute('data-tag');
-            cleanup();
-            resolve(tag);
-          }
         }
       };
       
@@ -3107,6 +3132,7 @@
       };
       
       cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
       searchInput.addEventListener('keydown', onKeydown);
       modal.addEventListener('click', onBackdropClick);
     });
