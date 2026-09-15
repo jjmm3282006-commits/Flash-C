@@ -3858,8 +3858,8 @@
       // Not a URL, that's fine - might be a peer ID
     }
     
-    // Check if it looks like a peer ID (starts with "flashcard-")
-    if (text.startsWith('flashcard-')) {
+    // Check if it looks like a peer ID (starts with "fc-")
+    if (text.startsWith('fc-')) {
       connectToP2PSender(text);
       return;
     }
