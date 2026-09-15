@@ -976,24 +976,27 @@
     display: flex;
     gap: 8px;
     margin-bottom: 16px;
-    padding: 12px;
-    background: var(--bg3);
-    border-radius: 8px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
   }
 
   .new-tag-input input {
     flex: 1;
-    padding: 8px 12px;
+    padding: 6px 10px;
     border: 1px solid var(--border);
-    border-radius: 6px;
-    background: var(--bg2);
+    border-radius: 4px;
+    background: var(--bg3);
     color: var(--text);
     font-size: 13px;
     outline: none;
+    transition: border-color 0.2s;
   }
 
   .new-tag-input input:focus {
     border-color: var(--accent);
+    background: var(--bg2);
   }
 
   /* Modal */
@@ -1306,8 +1309,8 @@
       </div>
       <div class="new-tag-input" id="newTagInput" style="display:none">
         <input type="text" id="newTagText" placeholder="Enter tag name..." autocomplete="off">
-        <button class="btn btn-primary" style="padding:8px 16px; font-size:13px;" onclick="addNewTag()">Add</button>
-        <button class="btn btn-ghost" style="padding:8px 16px; font-size:13px;" onclick="hideNewTagInput()">Cancel</button>
+        <button class="select-btn" onclick="addNewTag()">Add</button>
+        <button class="select-btn" onclick="hideNewTagInput()">Cancel</button>
       </div>
       
       <form class="form-stack" onsubmit="addCard(event)">
@@ -1463,8 +1466,8 @@
           </div>
           <div class="new-tag-input" id="newEditTagInput" style="display:none">
             <input type="text" id="newEditTagText" placeholder="Enter tag name...">
-            <button class="btn btn-primary" style="padding:8px 16px; font-size:13px;" onclick="addNewEditTag()">Add</button>
-            <button class="btn btn-ghost" style="padding:8px 16px; font-size:13px;" onclick="hideNewEditTagInput()">Cancel</button>
+            <button class="select-btn" onclick="addNewEditTag()">Add</button>
+            <button class="select-btn" onclick="hideNewEditTagInput()">Cancel</button>
           </div>
         </div>
       </div>
