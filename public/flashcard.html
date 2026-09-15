@@ -417,7 +417,8 @@
   }
 
   .flashcard-delete,
-  .flashcard-edit {
+  .flashcard-edit,
+  .flashcard-copy {
     background: none;
     border: none;
     color: var(--text3);
@@ -431,7 +432,8 @@
   }
   
   .flashcard-delete:hover,
-  .flashcard-edit:hover { 
+  .flashcard-edit:hover,
+  .flashcard-copy:hover { 
     background: var(--bg3);
   }
 
@@ -439,12 +441,17 @@
     color: var(--accent);
   }
 
+  .flashcard-copy:hover {
+    color: var(--success);
+  }
+
   .flashcard-delete:hover { 
     color: var(--danger);
   }
 
   .flashcard-delete svg,
-  .flashcard-edit svg {
+  .flashcard-edit svg,
+  .flashcard-copy svg {
     width: 16px;
     height: 16px;
   }
@@ -1313,6 +1320,7 @@
           <option value="">All Tags</option>
         </select>
         <button class="select-btn" id="selectModeBtn" onclick="toggleSelectionMode()">Select</button>
+        <button class="select-btn" onclick="copyAllCards()">Copy All</button>
         <button class="select-btn" id="deleteTagBtn" onclick="deleteAllWithTag()" style="display:none; color:var(--danger);">Delete All with Tag</button>
       </div>
       <div class="stats-row" id="statsRow"></div>
@@ -2045,6 +2053,91 @@
     renderCards();
   }
 
+  function copyCard(cardId) {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const card = deck.cards.find(c => c.id === cardId);
+    if (!card) return;
+    
+    const text = formatCardForCopy(card);
+    copyToClipboard(text);
+  }
+
+  function copyAllCards() {
+    const filteredCards = getFilteredCards();
+    if (filteredCards.length === 0) {
+      alert('No cards to copy.');
+      return;
+    }
+    
+    const text = filteredCards.map(formatCardForCopy).join('\n');
+    copyToClipboard(text);
+  }
+
+  function formatCardForCopy(card) {
+    let result = `(${card.front}) [${card.back}]`;
+    if (card.tags && card.tags.length > 0) {
+      result += ` {${card.tags.join(', ')}}`;
+    }
+    return result;
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopyFeedback();
+      }).catch(err => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showCopyFeedback();
+    } catch (err) {
+      alert('Failed to copy. Please try again.');
+    }
+    document.body.removeChild(textarea);
+  }
+
+  function showCopyFeedback() {
+    const feedback = document.createElement('div');
+    feedback.textContent = 'Copied!';
+    feedback.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--success);
+      color: white;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeIn 0.2s;
+    `;
+    document.body.appendChild(feedback);
+    
+    setTimeout(() => {
+      feedback.style.opacity = '0';
+      feedback.style.transition = 'opacity 0.3s';
+      setTimeout(() => feedback.remove(), 300);
+    }, 1500);
+  }
+
   function bulkImport() {
     const text = document.getElementById('bulkImportText').value.trim();
     const resultDiv = document.getElementById('bulkImportResult');
@@ -2191,6 +2284,11 @@
           </div>
           ${!selectionMode ? `
           <div style="display:flex; gap:8px; flex-shrink:0;">
+            <button class="flashcard-copy" onclick="copyCard('${card.id}')" title="Copy card">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
             <button class="flashcard-edit" onclick="editCard('${card.id}')" title="Edit card">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
