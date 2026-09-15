@@ -727,6 +727,96 @@
     background: var(--text3);
   }
 
+  /* Selection Mode */
+  .select-btn {
+    padding: 6px 14px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .select-btn:hover {
+    background: var(--bg3);
+  }
+
+  .select-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .card-checkbox {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+  }
+
+  .bulk-actions-bar {
+    background: var(--accent);
+    color: white;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .bulk-actions-bar .count {
+    font-weight: 600;
+    margin-right: auto;
+  }
+
+  .bulk-btn {
+    padding: 6px 12px;
+    border: 1px solid rgba(255,255,255,0.3);
+    border-radius: 6px;
+    background: rgba(255,255,255,0.1);
+    color: white;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .bulk-btn:hover {
+    background: rgba(255,255,255,0.2);
+  }
+
+  .bulk-btn.danger {
+    background: rgba(220, 38, 38, 0.8);
+    border-color: rgba(220, 38, 38, 0.5);
+  }
+
+  .bulk-btn.danger:hover {
+    background: rgba(220, 38, 38, 1);
+  }
+
+  .bulk-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 8px 12px;
+    background: var(--bg3);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .bulk-select-all label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
   /* Tag Tabs */
   .tag-tabs-container {
     display: flex;
@@ -1222,8 +1312,25 @@
         <select class="filter-select" id="tagFilter" onchange="setTagFilter(this.value)">
           <option value="">All Tags</option>
         </select>
+        <button class="select-btn" id="selectModeBtn" onclick="toggleSelectionMode()">Select</button>
+        <button class="select-btn" id="deleteTagBtn" onclick="deleteAllWithTag()" style="display:none; color:var(--danger);">Delete All with Tag</button>
       </div>
       <div class="stats-row" id="statsRow"></div>
+    </div>
+
+    <div id="bulkActionsBar" class="bulk-actions-bar" style="display:none">
+      <span class="count" id="selectedCount">0 selected</span>
+      <button class="bulk-btn" onclick="bulkAddTag()">Add Tag</button>
+      <button class="bulk-btn" onclick="bulkRemoveTag()">Remove Tag</button>
+      <button class="bulk-btn danger" onclick="bulkDelete()">Delete Selected</button>
+      <button class="bulk-btn" onclick="exitSelectionMode()">Cancel</button>
+    </div>
+
+    <div id="selectAllBar" class="bulk-select-all" style="display:none">
+      <label>
+        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+        <span>Select all visible cards</span>
+      </label>
     </div>
 
     <div id="cardsList"></div>
@@ -1481,6 +1588,10 @@
   let studyFilter = 'all'; // Filter for study mode
   let studyTagFilter = ''; // Tag filter for study mode
   
+  // Bulk selection state
+  let selectionMode = false;
+  let selectedCardIds = new Set();
+  
   // P2P State
   let peer = null;
   let currentConnection = null;
@@ -1575,6 +1686,8 @@
     currentTagFilter = '';
     selectedTags = [];
     pendingTags = [];
+    selectionMode = false;
+    selectedCardIds.clear();
     renderCards();
     showView('cardsView');
   }
@@ -2064,14 +2177,19 @@
           <div class="empty-state-text">No cards match the current filters.</div>
         </div>`;
     } else {
-      container.innerHTML = '<div class="section-label">Cards (' + filteredCards.length + ')</div>' + filteredCards.map(card => `
-        <div class="flashcard-item">
-          <div class="${card.learned ? 'learned-indicator' : 'not-learned-indicator'}"></div>
-          <div class="flashcard-content">
+      container.innerHTML = '<div class="section-label">Cards (' + filteredCards.length + ')</div>' + filteredCards.map(card => {
+        const isSelected = selectedCardIds.has(card.id);
+        const checkboxHtml = selectionMode ? `<input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCardSelection('${card.id}')">` : '';
+        
+        return `
+        <div class="flashcard-item" ${selectionMode ? 'style="cursor:pointer;"' : ''}>
+          ${selectionMode ? checkboxHtml : `<div class="${card.learned ? 'learned-indicator' : 'not-learned-indicator'}"></div>`}
+          <div class="flashcard-content" ${selectionMode ? `onclick="toggleCardSelection('${card.id}')"` : ''}>
             <div class="flashcard-front">${escapeHtml(card.front)}</div>
             <div class="flashcard-back">${escapeHtml(card.back)}</div>
             ${(card.tags && card.tags.length > 0) ? '<div>' + card.tags.map(t => '<span class="tag-pill">' + escapeHtml(t) + '</span>').join('') + '</div>' : ''}
           </div>
+          ${!selectionMode ? `
           <div style="display:flex; gap:8px; flex-shrink:0;">
             <button class="flashcard-edit" onclick="editCard('${card.id}')" title="Edit card">
               <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -2084,8 +2202,10 @@
               </svg>
             </button>
           </div>
+          ` : ''}
         </div>
-      `).join('');
+      `;
+      }).join('');
     }
 
     // Update study button
@@ -2119,6 +2239,46 @@
 
   function setTagFilter(tag) {
     currentTagFilter = tag;
+    
+    // Show/hide delete tag button
+    const deleteTagBtn = document.getElementById('deleteTagBtn');
+    if (tag) {
+      deleteTagBtn.style.display = 'block';
+    } else {
+      deleteTagBtn.style.display = 'none';
+    }
+    
+    renderCards();
+  }
+
+  async function deleteAllWithTag() {
+    if (!currentTagFilter) return;
+    
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const cardsWithTag = deck.cards.filter(card => card.tags && card.tags.includes(currentTagFilter));
+    
+    if (cardsWithTag.length === 0) {
+      alert('No cards found with this tag.');
+      return;
+    }
+    
+    const confirmed = await showConfirm(
+      'Delete All Cards with Tag',
+      `Are you sure you want to delete all ${cardsWithTag.length} card${cardsWithTag.length !== 1 ? 's' : ''} with the tag "${currentTagFilter}"? This action cannot be undone.`,
+      'Delete Cards'
+    );
+    if (!confirmed) return;
+    
+    deck.cards = deck.cards.filter(card => !card.tags || !card.tags.includes(currentTagFilter));
+    save();
+    
+    // Reset tag filter
+    currentTagFilter = '';
+    document.getElementById('tagFilter').value = '';
+    document.getElementById('deleteTagBtn').style.display = 'none';
+    
     renderCards();
   }
 
@@ -2195,6 +2355,155 @@
     if (!deck) return;
     deck.cards.forEach(card => card.learned = false);
     save();
+    renderCards();
+  }
+
+  // Bulk Selection Functions
+  function toggleSelectionMode() {
+    selectionMode = !selectionMode;
+    selectedCardIds.clear();
+    
+    const btn = document.getElementById('selectModeBtn');
+    btn.classList.toggle('active', selectionMode);
+    btn.textContent = selectionMode ? 'Done' : 'Select';
+    
+    updateBulkUI();
+    renderCards();
+  }
+
+  function exitSelectionMode() {
+    selectionMode = false;
+    selectedCardIds.clear();
+    
+    const btn = document.getElementById('selectModeBtn');
+    btn.classList.remove('active');
+    btn.textContent = 'Select';
+    
+    updateBulkUI();
+    renderCards();
+  }
+
+  function toggleCardSelection(cardId) {
+    if (selectedCardIds.has(cardId)) {
+      selectedCardIds.delete(cardId);
+    } else {
+      selectedCardIds.add(cardId);
+    }
+    updateBulkUI();
+  }
+
+  function toggleSelectAll(checked) {
+    const filteredCards = getFilteredCards();
+    if (checked) {
+      filteredCards.forEach(card => selectedCardIds.add(card.id));
+    } else {
+      selectedCardIds.clear();
+    }
+    updateBulkUI();
+    renderCards();
+  }
+
+  function updateBulkUI() {
+    const bulkBar = document.getElementById('bulkActionsBar');
+    const selectAllBar = document.getElementById('selectAllBar');
+    const countEl = document.getElementById('selectedCount');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (selectionMode) {
+      selectAllBar.style.display = 'flex';
+      
+      if (selectedCardIds.size > 0) {
+        bulkBar.style.display = 'flex';
+        countEl.textContent = `${selectedCardIds.size} selected`;
+      } else {
+        bulkBar.style.display = 'none';
+      }
+      
+      // Update select all checkbox state
+      const filteredCards = getFilteredCards();
+      const allSelected = filteredCards.length > 0 && filteredCards.every(card => selectedCardIds.has(card.id));
+      selectAllCheckbox.checked = allSelected;
+    } else {
+      bulkBar.style.display = 'none';
+      selectAllBar.style.display = 'none';
+    }
+  }
+
+  function bulkAddTag() {
+    if (selectedCardIds.size === 0) return;
+    
+    const tagName = prompt('Enter tag name to add to selected cards:');
+    if (!tagName || !tagName.trim()) return;
+    
+    const tag = tagName.trim();
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id)) {
+        if (!card.tags) card.tags = [];
+        if (!card.tags.includes(tag)) {
+          card.tags.push(tag);
+        }
+      }
+    });
+    
+    save();
+    exitSelectionMode();
+    renderCards();
+  }
+
+  function bulkRemoveTag() {
+    if (selectedCardIds.size === 0) return;
+    
+    // Get all tags from selected cards
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const tagsInSelection = new Set();
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id) && card.tags) {
+        card.tags.forEach(tag => tagsInSelection.add(tag));
+      }
+    });
+    
+    if (tagsInSelection.size === 0) {
+      alert('No tags found in selected cards.');
+      return;
+    }
+    
+    const tagName = prompt(`Enter tag name to remove from selected cards:\n\nAvailable tags: ${Array.from(tagsInSelection).join(', ')}`);
+    if (!tagName || !tagName.trim()) return;
+    
+    const tag = tagName.trim();
+    
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id) && card.tags) {
+        card.tags = card.tags.filter(t => t !== tag);
+      }
+    });
+    
+    save();
+    exitSelectionMode();
+    renderCards();
+  }
+
+  async function bulkDelete() {
+    if (selectedCardIds.size === 0) return;
+    
+    const confirmed = await showConfirm(
+      'Delete Selected Cards',
+      `Are you sure you want to delete ${selectedCardIds.size} card${selectedCardIds.size !== 1 ? 's' : ''}? This action cannot be undone.`,
+      'Delete Cards'
+    );
+    if (!confirmed) return;
+    
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    deck.cards = deck.cards.filter(card => !selectedCardIds.has(card.id));
+    save();
+    exitSelectionMode();
     renderCards();
   }
 
