@@ -3478,14 +3478,14 @@
     // Clear previous QR code
     qrContainer.innerHTML = '';
     
-    // Generate QR code
+    // Generate QR code with higher quality for better scanning
     new QRCode(qrContainer, {
       text: shareUrl,
-      width: 220,
-      height: 220,
+      width: 280,
+      height: 280,
       colorDark: '#000000',
       colorLight: '#ffffff',
-      correctLevel: QRCode.CorrectLevel.M
+      correctLevel: QRCode.CorrectLevel.H
     });
     
     // Reset status
@@ -3559,6 +3559,8 @@
   }
 
   function connectToP2PSender(peerId) {
+    console.log('Connecting to peer:', peerId);
+    
     // Initialize PeerJS as receiver
     peer = new Peer();
 
@@ -3594,7 +3596,12 @@
 
     peer.on('error', (err) => {
       console.error('Peer error:', err);
-      alert('P2P connection error: ' + err);
+      const errorMsg = err.toString();
+      if (errorMsg.includes('Peer ID could not be found')) {
+        alert('Could not find the sender. Make sure they are still sharing and the code is correct.');
+      } else {
+        alert('P2P connection error: ' + err);
+      }
     });
   }
 
@@ -3746,13 +3753,23 @@
     html5QrcodeScanner = new Html5Qrcode("qr-reader");
     
     const config = {
-      fps: 10,
-      qrbox: { width: 250, height: 250 },
-      aspectRatio: 1.0
+      fps: 15,
+      qrbox: function(viewfinderWidth, viewfinderHeight) {
+        let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        let qrboxSize = Math.floor(minEdge * 0.7);
+        return { width: qrboxSize, height: qrboxSize };
+      },
+      aspectRatio: 1.0,
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+    };
+    
+    // Try to get camera constraints for better mobile support
+    const cameraConfig = {
+      facingMode: { exact: "environment" }
     };
     
     html5QrcodeScanner.start(
-      { facingMode: "environment" },
+      cameraConfig,
       config,
       onScanSuccess,
       onScanFailure
@@ -3760,16 +3777,42 @@
       status.textContent = 'Point camera at QR code';
       status.style.color = 'var(--success)';
     }).catch(err => {
-      status.textContent = 'Camera access denied or not available';
-      status.style.color = 'var(--danger)';
-      console.error('Scanner error:', err);
+      console.error('Scanner error with exact facingMode:', err);
       
-      // Show manual input after error
-      setTimeout(() => {
-        cameraView.style.display = 'none';
-        manualView.style.display = 'block';
-        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
-      }, 2000);
+      // Fallback: try without exact constraint
+      html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanFailure
+      ).then(() => {
+        status.textContent = 'Point camera at QR code';
+        status.style.color = 'var(--success)';
+      }).catch(err2 => {
+        console.error('Scanner error with fallback:', err2);
+        
+        // Final fallback: let browser choose camera
+        html5QrcodeScanner.start(
+          { facingMode: "user" },
+          config,
+          onScanSuccess,
+          onScanFailure
+        ).then(() => {
+          status.textContent = 'Point camera at QR code (front camera)';
+          status.style.color = 'var(--success)';
+        }).catch(err3 => {
+          status.textContent = 'Camera access denied or not available';
+          status.style.color = 'var(--danger)';
+          console.error('All scanner attempts failed:', err3);
+          
+          // Show manual input after error
+          setTimeout(() => {
+            cameraView.style.display = 'none';
+            manualView.style.display = 'block';
+            document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+          }, 2000);
+        });
+      });
     });
   }
 
@@ -3821,24 +3864,44 @@
 
   function onScanSuccess(decodedText, decodedResult) {
     console.log('QR Code scanned:', decodedText);
+    console.log('Scan result:', decodedResult);
     
-    // Stop scanner
+    // Store the scanned text
+    const scannedCode = decodedText;
+    
+    // Stop scanner first
     if (html5QrcodeScanner) {
       html5QrcodeScanner.stop().then(() => {
         html5QrcodeScanner.clear();
         html5QrcodeScanner = null;
+        
+        // Close scanner modal after scanner is stopped
+        closeScanner();
+        
+        // Small delay to ensure modal is closed before processing
+        setTimeout(() => {
+          // Parse the QR code - could be a full URL or just a peer ID
+          handleConnectionInput(scannedCode);
+        }, 300);
+      }).catch(err => {
+        console.error('Error stopping scanner:', err);
+        closeScanner();
+        setTimeout(() => {
+          handleConnectionInput(scannedCode);
+        }, 300);
       });
+    } else {
+      closeScanner();
+      setTimeout(() => {
+        handleConnectionInput(scannedCode);
+      }, 300);
     }
-    
-    // Close scanner modal
-    closeScanner();
-    
-    // Parse the QR code - could be a full URL or just a peer ID
-    handleConnectionInput(decodedText);
   }
 
   function handleConnectionInput(input) {
     const text = input.trim();
+    
+    console.log('Processing connection input:', text);
     
     if (!text) {
       alert('Empty input. Please try again.');
@@ -3851,20 +3914,24 @@
       const receiveId = url.searchParams.get('receive');
       
       if (receiveId) {
+        console.log('Found receive ID in URL:', receiveId);
         connectToP2PSender(receiveId);
         return;
       }
     } catch (err) {
       // Not a URL, that's fine - might be a peer ID
+      console.log('Not a URL, checking if peer ID');
     }
     
     // Check if it looks like a peer ID (starts with "fc-")
     if (text.startsWith('fc-')) {
+      console.log('Valid peer ID format:', text);
       connectToP2PSender(text);
       return;
     }
     
-    alert('Invalid connection code. Please check and try again.');
+    console.error('Invalid connection code:', text);
+    alert('Invalid connection code. Please check and try again.\n\nExpected format: fc-xxxxxxxx-xxxxxxxx');
   }
 
   function onScanFailure(error) {
