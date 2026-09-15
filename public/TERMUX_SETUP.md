@@ -20,16 +20,18 @@ cd ~/flashcard
 ```
 
 #### 4. Download the Files
-If you have the files hosted online (GitHub, etc.):
+Download the complete app package:
 ```bash
-wget https://your-host.com/flashcard.html
-wget https://your-host.com/server.py
+wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip
+unzip cross-device-web-app-development-7ebac.zip
+mv Flash-C-cross-device-web-app-development-7ebac/* .
+rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip
 ```
 
-**OR** Download from GitHub (replace with your actual repo URL):
+**OR** Download individual files:
 ```bash
-wget https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/flashcard.html
-wget https://raw.githubusercontent.com/YOUR_USERNAME/YOUR_REPO/main/server.py
+wget https://raw.githubusercontent.com/jjmm3282006-commits/Flash-C/cross-device-web-app-development-7ebac/flashcard.html
+wget https://raw.githubusercontent.com/jjmm3282006-commits/Flash-C/cross-device-web-app-development-7ebac/server.py
 ```
 
 #### 5. Make Server Executable
@@ -145,9 +147,9 @@ python server.py
 pkg update && pkg install python -y && python server.py
 ```
 
-**Download and run (replace URL):**
+**Download and run:**
 ```bash
-pkg update && pkg install python wget -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://your-host.com/flashcard.html && wget https://your-host.com/server.py && python server.py
+pkg update && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && mv Flash-C-cross-device-web-app-development-7ebac/* . && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
 ```
 
 ## Stop the Server
