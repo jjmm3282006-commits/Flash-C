@@ -1635,6 +1635,14 @@
             <input type="text" id="manualP2PUrl" placeholder="Paste code or link here...">
             <button class="btn btn-primary" onclick="connectFromManualInput()">Connect</button>
           </div>
+          <div style="margin-top:16px; padding:12px; background:var(--bg3); border-radius:8px; border-left:3px solid var(--accent);">
+            <p style="color:var(--text2); font-size:12px; line-height:1.6; margin:0;">
+              <strong>Camera not available?</strong><br>
+              For camera access, serve this app over HTTP. On Android, use Termux:<br>
+              <code style="background:var(--bg2); padding:2px 6px; border-radius:4px; font-size:11px;">python server.py</code><br>
+              Then open <code style="background:var(--bg2); padding:2px 6px; border-radius:4px; font-size:11px;">http://localhost:8000</code>
+            </p>
+          </div>
           <p style="color:var(--text3); font-size:12px; margin-top:12px; line-height:1.5;">
             💡 Ask the sender to click "Copy" on their share screen and send you the code.
           </p>
