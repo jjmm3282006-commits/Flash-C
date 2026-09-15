@@ -1263,7 +1263,10 @@
 
   <!-- CARDS VIEW -->
   <div class="view" id="cardsView">
-    <h2 class="page-title" id="cardsDeckName"></h2>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+      <h2 class="page-title" id="cardsDeckName"></h2>
+      <button class="select-btn" onclick="copyDeck()" title="Copy entire deck">Copy Deck</button>
+    </div>
     <p class="page-subtitle" id="cardsDeckCount"></p>
 
     <div class="card">
@@ -2072,6 +2075,17 @@
     }
     
     const text = filteredCards.map(formatCardForCopy).join('\n');
+    copyToClipboard(text);
+  }
+
+  function copyDeck() {
+    const deck = getCurrentDeck();
+    if (!deck || deck.cards.length === 0) {
+      alert('No cards in this deck.');
+      return;
+    }
+    
+    const text = deck.cards.map(formatCardForCopy).join('\n');
     copyToClipboard(text);
   }
 
