@@ -3561,12 +3561,16 @@
   function connectToP2PSender(peerId) {
     console.log('Connecting to peer:', peerId);
     
+    // Show the receive modal immediately with connecting status
+    showP2PReceiveModal();
+    document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--accent); font-size:14px;">Initializing connection...</p>';
+    
     // Initialize PeerJS as receiver
     peer = new Peer();
 
     peer.on('open', (id) => {
       console.log('Receiver Peer ID:', id);
-      showP2PReceiveModal();
+      document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--accent); font-size:14px;">Connecting to sender...</p>';
       
       // Connect to sender
       const conn = peer.connect(peerId);
@@ -3586,6 +3590,9 @@
 
       conn.on('close', () => {
         console.log('Connection closed');
+        if (!receivedDeckData) {
+          document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">Connection closed by sender.</p>';
+        }
       });
 
       conn.on('error', (err) => {
@@ -3597,11 +3604,15 @@
     peer.on('error', (err) => {
       console.error('Peer error:', err);
       const errorMsg = err.toString();
-      if (errorMsg.includes('Peer ID could not be found')) {
-        alert('Could not find the sender. Make sure they are still sharing and the code is correct.');
-      } else {
-        alert('P2P connection error: ' + err);
+      let userMessage = 'P2P connection error: ' + err;
+      
+      if (errorMsg.includes('Peer ID could not be found') || errorMsg.includes('unavailable')) {
+        userMessage = 'Could not find the sender. Make sure:\n\n1. The sender is still on the share screen\n2. The sender hasn\'t closed the share modal\n3. Both devices have internet connection\n\nTry copying the code manually instead.';
+      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+        userMessage = 'Network error. Please check your internet connection and try again.';
       }
+      
+      document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">' + userMessage + '</p>';
     });
   }
 
@@ -3875,26 +3886,22 @@
         html5QrcodeScanner.clear();
         html5QrcodeScanner = null;
         
-        // Close scanner modal after scanner is stopped
-        closeScanner();
+        // Show connecting message in the scanner modal
+        const status = document.getElementById('scannerStatus');
+        status.textContent = 'QR code detected! Connecting...';
+        status.style.color = 'var(--success)';
         
-        // Small delay to ensure modal is closed before processing
+        // Small delay to show the message, then process
         setTimeout(() => {
           // Parse the QR code - could be a full URL or just a peer ID
           handleConnectionInput(scannedCode);
-        }, 300);
+        }, 500);
       }).catch(err => {
         console.error('Error stopping scanner:', err);
-        closeScanner();
-        setTimeout(() => {
-          handleConnectionInput(scannedCode);
-        }, 300);
+        handleConnectionInput(scannedCode);
       });
     } else {
-      closeScanner();
-      setTimeout(() => {
-        handleConnectionInput(scannedCode);
-      }, 300);
+      handleConnectionInput(scannedCode);
     }
   }
 
@@ -3915,7 +3922,11 @@
       
       if (receiveId) {
         console.log('Found receive ID in URL:', receiveId);
-        connectToP2PSender(receiveId);
+        // Close scanner modal first
+        closeScanner();
+        setTimeout(() => {
+          connectToP2PSender(receiveId);
+        }, 300);
         return;
       }
     } catch (err) {
@@ -3926,7 +3937,11 @@
     // Check if it looks like a peer ID (starts with "fc-")
     if (text.startsWith('fc-')) {
       console.log('Valid peer ID format:', text);
-      connectToP2PSender(text);
+      // Close scanner modal first
+      closeScanner();
+      setTimeout(() => {
+        connectToP2PSender(text);
+      }, 300);
       return;
     }
     
