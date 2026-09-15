@@ -1561,6 +1561,23 @@
     </div>
   </div>
 
+  <!-- Input Modal -->
+  <div id="inputModal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 id="inputModalTitle">Input</h3>
+      </div>
+      <div class="modal-body">
+        <p id="inputModalMessage" style="color:var(--text2); font-size:14px; line-height:1.6; margin-bottom:12px;"></p>
+        <input type="text" id="inputModalField" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg3); color:var(--text); font-size:14px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="inputModalCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="inputModalOkBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QR Scanner Modal -->
   <div id="scannerModal" class="modal">
     <div class="modal-content" style="max-width:500px;">
@@ -2569,21 +2586,20 @@
     }
   }
 
-  function bulkAddTag() {
+  async function bulkAddTag() {
     if (selectedCardIds.size === 0) return;
     
-    const tagName = prompt('Enter tag name to add to selected cards:');
-    if (!tagName || !tagName.trim()) return;
+    const tagName = await showInput('Add Tag', 'Enter tag name to add to selected cards:', 'e.g., math, chapter1');
+    if (!tagName) return;
     
-    const tag = tagName.trim();
     const deck = getCurrentDeck();
     if (!deck) return;
     
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id)) {
         if (!card.tags) card.tags = [];
-        if (!card.tags.includes(tag)) {
-          card.tags.push(tag);
+        if (!card.tags.includes(tagName)) {
+          card.tags.push(tagName);
         }
       }
     });
@@ -2593,7 +2609,7 @@
     renderCards();
   }
 
-  function bulkRemoveTag() {
+  async function bulkRemoveTag() {
     if (selectedCardIds.size === 0) return;
     
     // Get all tags from selected cards
@@ -2612,14 +2628,12 @@
       return;
     }
     
-    const tagName = prompt(`Enter tag name to remove from selected cards:\n\nAvailable tags: ${Array.from(tagsInSelection).join(', ')}`);
-    if (!tagName || !tagName.trim()) return;
-    
-    const tag = tagName.trim();
+    const tagName = await showInput('Remove Tag', `Enter tag name to remove from selected cards.\n\nAvailable tags: ${Array.from(tagsInSelection).join(', ')}`, 'Tag name');
+    if (!tagName) return;
     
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id) && card.tags) {
-        card.tags = card.tags.filter(t => t !== tag);
+        card.tags = card.tags.filter(t => t !== tagName);
       }
     });
     
@@ -2836,6 +2850,66 @@
     return div.innerHTML;
   }
 
+  // Custom Input Modal
+  function showInput(title, message, placeholder = '') {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = placeholder;
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        cancelBtn.removeEventListener('click', onCancel);
+        okBtn.removeEventListener('click', onOk);
+        inputEl.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = () => {
+        const value = inputEl.value.trim();
+        cleanup();
+        resolve(value || null);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Enter') {
+          onOk();
+        } else if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      inputEl.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
   // Custom Confirm Modal
   function showConfirm(title, message, okText = 'Delete') {
     return new Promise((resolve) => {
@@ -2987,12 +3061,15 @@
     if (e.key === 'Escape') {
       const editModal = document.getElementById('editModal');
       const confirmModal = document.getElementById('confirmModal');
+      const inputModal = document.getElementById('inputModal');
       const shareModal = document.getElementById('shareModal');
       const p2pModal = document.getElementById('p2pShareModal');
       const scannerModal = document.getElementById('scannerModal');
       
       if (confirmModal.classList.contains('active')) {
         document.getElementById('confirmCancelBtn').click();
+      } else if (inputModal.classList.contains('active')) {
+        document.getElementById('inputModalCancelBtn').click();
       } else if (scannerModal.classList.contains('active')) {
         closeScanner();
       } else if (p2pModal.classList.contains('active')) {
