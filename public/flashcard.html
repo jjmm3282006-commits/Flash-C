@@ -1293,11 +1293,19 @@
         <h2 class="page-title" id="cardsDeckName"></h2>
         <p class="page-subtitle" id="cardsDeckCount" style="margin-bottom:0;"></p>
       </div>
-      <button class="icon-btn" onclick="copyDeck()" title="Copy entire deck" style="margin-top:8px;">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px; height:18px;">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-      </button>
+      <div style="display: flex; gap: 8px; margin-top:8px;">
+        <button class="icon-btn" onclick="copyDeck()" title="Copy deck">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px; height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="copyAllCards()" title="Copy all visible cards">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px; height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2"/>
+          </svg>
+        </button>
+      </div>
     </div>
 
     <div class="card">
@@ -1308,8 +1316,7 @@
         <div class="tag-tabs-wrapper">
           <div class="tag-tabs" id="tagTabs"></div>
         </div>
-        <button class="tag-action-btn" id="deselectAllBtn" onclick="deselectAllTags()" style="display:none;">Deselect All</button>
-        <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()">+</button>
+        <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()" style="opacity:0.6;">+</button>
       </div>
       <div class="new-tag-input" id="newTagInput" style="display:none">
         <input type="text" id="newTagText" placeholder="Enter tag name..." autocomplete="off">
@@ -1325,23 +1332,30 @@
     </div>
 
     <div class="card">
-      <div class="card-label">Bulk Import</div>
-      <p style="font-size:14px; color:var(--text2); margin-bottom:12px;">
-        Paste multiple cards using (question) [answer] format. Add optional tags with {tag1, tag2}
-      </p>
-      <textarea 
-        id="bulkImportText" 
-        placeholder="(What is the capital of France?) [Paris] {geography, europe}
+      <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleBulkImport()">
+        <div class="card-label" style="margin:0;">Bulk Import</div>
+        <svg id="bulkImportToggleIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px; height:20px; color:var(--text3); transition:transform 0.3s;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div id="bulkImportContent" style="display:none; margin-top:12px;">
+        <p style="font-size:14px; color:var(--text2); margin-bottom:12px;">
+          Paste multiple cards using (question) [answer] format. Add optional tags with {tag1, tag2}
+        </p>
+        <textarea 
+          id="bulkImportText" 
+          placeholder="(What is the capital of France?) [Paris] {geography, europe}
 (Who painted the Mona Lisa?) [Leonardo da Vinci] {art, history}
 (What is the chemical symbol for gold?) [Au] {chemistry, science}
 (How many planets are in our solar system?) [8] {astronomy}
 (What is photosynthesis?) [The process by which plants convert sunlight into food] {biology, science}"
-        style="width:100%; min-height:120px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg2); color:var(--text); outline:none; resize:vertical; font-family:inherit; transition:all 0.2s;"
-        onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(66, 153, 225, 0.1)';"
-        onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
-      ></textarea>
-      <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="bulkImport()">Import Cards</button>
-      <div id="bulkImportResult" style="margin-top:12px; font-size:14px; display:none;"></div>
+          style="width:100%; min-height:120px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg2); color:var(--text); outline:none; resize:vertical; font-family:inherit; transition:all 0.2s;"
+          onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(66, 153, 225, 0.1)';"
+          onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+        ></textarea>
+        <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="bulkImport()">Import Cards</button>
+        <div id="bulkImportResult" style="margin-top:12px; font-size:14px; display:none;"></div>
+      </div>
     </div>
 
     <div id="filterBar" style="display:none">
@@ -1354,8 +1368,10 @@
           <option value="">All Tags</option>
         </select>
         <button class="select-btn" id="selectModeBtn" onclick="toggleSelectionMode()">Select</button>
-        <button class="select-btn" onclick="copyAllCards()">Copy All</button>
-        <button class="select-btn" id="deleteTagBtn" onclick="deleteAllWithTag()" style="display:none; color:var(--danger); border-color:var(--danger);">Delete Tag</button>
+      </div>
+      <div id="deleteTagBar" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg3); border-radius:6px; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; color:var(--text2);">Filtering by tag: <strong id="currentFilterTagName"></strong></span>
+        <button class="select-btn" onclick="deleteAllWithTag()" style="color:var(--danger); border-color:var(--danger); font-size:12px; padding:4px 10px;">Delete All</button>
       </div>
       <div class="stats-row" id="statsRow"></div>
     </div>
@@ -1381,12 +1397,14 @@
       <button class="btn btn-success btn-full" style="padding:14px; font-size:15px; margin-top:12px;" onclick="startStudy()">
         Start Studying
       </button>
-      <button class="btn btn-ghost btn-full" style="padding:12px; font-size:14px; margin-top:8px;" onclick="startP2PShare()">
-        Share Deck (P2P)
-      </button>
-      <button class="btn btn-ghost btn-full" style="padding:10px; font-size:13px; margin-top:8px; color:var(--text3);" onclick="resetProgress()">
-        Reset Progress
-      </button>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn btn-ghost" style="flex:1; padding:10px; font-size:13px;" onclick="startP2PShare()">
+          Share (P2P)
+        </button>
+        <button class="btn btn-ghost" style="flex:1; padding:10px; font-size:13px; color:var(--text3);" onclick="resetProgress()">
+          Reset
+        </button>
+      </div>
     </div>
   </div>
 
@@ -1402,16 +1420,6 @@
       <select class="filter-select" id="studyTagFilter" onchange="setStudyTagFilter(this.value)">
         <option value="">All Tags</option>
       </select>
-      <button class="icon-btn" onclick="copyStudyCard()" title="Copy card">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-        </svg>
-      </button>
-      <button class="icon-btn" onclick="editStudyCard()" title="Edit card">
-        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-        </svg>
-      </button>
     </div>
 
     <div class="progress-container">
@@ -1445,6 +1453,19 @@
         <button class="btn btn-ghost" id="nextBtn" onclick="nextCard()">Next</button>
       </div>
 
+      <div style="display:flex; justify-content:center; gap:8px; margin-top:12px;">
+        <button class="icon-btn" onclick="copyStudyCard()" title="Copy card">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+        </button>
+        <button class="icon-btn" onclick="editStudyCard()" title="Edit card">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+          </svg>
+        </button>
+      </div>
+
       <button class="btn btn-ghost btn-full" style="margin-top:12px; padding:10px; font-size:13px; color:var(--text3);" onclick="tryAgain()">
         Try Again
       </button>
@@ -1475,8 +1496,7 @@
             <div class="tag-tabs-wrapper">
               <div class="tag-tabs" id="editTagTabs"></div>
             </div>
-            <button class="tag-action-btn" id="editDeselectAllBtn" onclick="deselectAllEditTags()" style="display:none;">Deselect All</button>
-            <button class="tag-add-btn" onclick="showNewEditTagInput()">+</button>
+            <button class="tag-add-btn" onclick="showNewEditTagInput()" style="opacity:0.6;">+</button>
           </div>
           <div class="new-tag-input" id="newEditTagInput" style="display:none">
             <input type="text" id="newEditTagText" placeholder="Enter tag name...">
@@ -1842,7 +1862,6 @@
   function renderTagTabs() {
     const allTags = getAllTags();
     const tagTabs = document.getElementById('tagTabs');
-    const deselectAllBtn = document.getElementById('deselectAllBtn');
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
@@ -1851,13 +1870,6 @@
         const isSelected = selectedTags.includes(tag);
         return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
       }).join('');
-    }
-    
-    // Show/hide deselect all button based on selection
-    if (selectedTags.length > 0) {
-      deselectAllBtn.style.display = 'block';
-    } else {
-      deselectAllBtn.style.display = 'none';
     }
     
     // Trigger scroll check after rendering
@@ -1869,11 +1881,6 @@
         wrapper.classList.remove('has-scroll');
       }
     }, 50);
-  }
-
-  function deselectAllTags() {
-    selectedTags = [];
-    renderTagTabs();
   }
 
   async function removeTag(tag) {
@@ -2001,7 +2008,6 @@
   function renderEditTagTabs() {
     const allTags = getAllTags();
     const tagTabs = document.getElementById('editTagTabs');
-    const deselectAllBtn = document.getElementById('editDeselectAllBtn');
     
     if (allTags.length === 0) {
       tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
@@ -2010,13 +2016,6 @@
         const isSelected = editSelectedTags.includes(tag);
         return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
       }).join('');
-    }
-    
-    // Show/hide deselect all button based on selection
-    if (editSelectedTags.length > 0) {
-      deselectAllBtn.style.display = 'block';
-    } else {
-      deselectAllBtn.style.display = 'none';
     }
     
     // Trigger scroll check after rendering
@@ -2028,11 +2027,6 @@
         wrapper.classList.remove('has-scroll');
       }
     }, 50);
-  }
-
-  function deselectAllEditTags() {
-    editSelectedTags = [];
-    renderEditTagTabs();
   }
 
   function toggleEditTag(tag) {
@@ -2209,6 +2203,19 @@
       feedback.style.transition = 'opacity 0.3s';
       setTimeout(() => feedback.remove(), 300);
     }, 1500);
+  }
+
+  function toggleBulkImport() {
+    const content = document.getElementById('bulkImportContent');
+    const icon = document.getElementById('bulkImportToggleIcon');
+    
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      icon.style.transform = 'rotate(180deg)';
+    } else {
+      content.style.display = 'none';
+      icon.style.transform = 'rotate(0deg)';
+    }
   }
 
   function bulkImport() {
@@ -2411,12 +2418,14 @@
   function setTagFilter(tag) {
     currentTagFilter = tag;
     
-    // Show/hide delete tag button
-    const deleteTagBtn = document.getElementById('deleteTagBtn');
+    // Show/hide delete tag bar
+    const deleteTagBar = document.getElementById('deleteTagBar');
+    const currentFilterTagName = document.getElementById('currentFilterTagName');
     if (tag) {
-      deleteTagBtn.style.display = 'block';
+      deleteTagBar.style.display = 'flex';
+      currentFilterTagName.textContent = tag;
     } else {
-      deleteTagBtn.style.display = 'none';
+      deleteTagBar.style.display = 'none';
     }
     
     renderCards();
@@ -2448,7 +2457,7 @@
     // Reset tag filter
     currentTagFilter = '';
     document.getElementById('tagFilter').value = '';
-    document.getElementById('deleteTagBtn').style.display = 'none';
+    document.getElementById('deleteTagBar').style.display = 'none';
     
     renderCards();
   }
