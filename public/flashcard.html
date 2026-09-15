@@ -1299,12 +1299,6 @@
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
           </svg>
         </button>
-        <button class="icon-btn" onclick="copyAllCards()" title="Copy all visible cards">
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px; height:18px;">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8h2a2 2 0 012 2v8a2 2 0 01-2 2h-8a2 2 0 01-2-2v-2"/>
-          </svg>
-        </button>
       </div>
     </div>
 
@@ -3426,7 +3420,7 @@
     }
 
     // Initialize PeerJS
-    const peerId = 'fc-' + Math.random().toString(36).substr(2, 6);
+    const peerId = 'fc-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 8);
     peer = new Peer(peerId);
 
     peer.on('open', (id) => {
