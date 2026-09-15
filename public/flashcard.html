@@ -3418,7 +3418,7 @@
     }
 
     // Initialize PeerJS
-    const peerId = 'flashcard-' + Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+    const peerId = 'fc-' + Math.random().toString(36).substr(2, 6);
     peer = new Peer(peerId);
 
     peer.on('open', (id) => {
