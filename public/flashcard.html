@@ -680,6 +680,68 @@
     border-color: var(--text3);
   }
 
+  /* Filter Tag Buttons */
+  .filter-tag-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-tag-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .filter-tag-btn.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  /* Selected Tag Pills */
+  .selected-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+  }
+
+  .selected-tag-pill .remove-tag {
+    cursor: pointer;
+    opacity: 0.8;
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .selected-tag-pill .remove-tag:hover {
+    opacity: 1;
+  }
+
+  .clear-tags-btn {
+    padding: 3px 8px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .clear-tags-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
   /* Tag Pills */
   .tag-pill {
     display: inline-block;
@@ -1358,14 +1420,21 @@
         <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
         <button class="filter-btn" data-filter="learned" onclick="setFilter('learned')">Learned</button>
         <button class="filter-btn" data-filter="not-learned" onclick="setFilter('not-learned')">Not Learned</button>
-        <select class="filter-select" id="tagFilter" onchange="setTagFilter(this.value)">
-          <option value="">All Tags</option>
-        </select>
         <button class="select-btn" id="selectModeBtn" onclick="toggleSelectionMode()">Select</button>
       </div>
+      
+      <!-- Tag Filter Section -->
+      <div style="margin-top:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
+          <div id="selectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
+        </div>
+        <div id="tagFilterContainer" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+      </div>
+      
       <div id="deleteTagBar" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg3); border-radius:6px; align-items:center; justify-content:space-between;">
-        <span style="font-size:13px; color:var(--text2);">Filtering by tag: <strong id="currentFilterTagName"></strong></span>
-        <button class="select-btn" onclick="deleteAllWithTag()" style="color:var(--danger); border-color:var(--danger); font-size:12px; padding:4px 10px;">Delete All</button>
+        <span style="font-size:13px; color:var(--text2);">Filtering by tags: <strong id="currentFilterTagName"></strong></span>
+        <button class="select-btn" onclick="deleteAllWithTags()" style="color:var(--danger); border-color:var(--danger); font-size:12px; padding:4px 10px;">Delete All</button>
       </div>
       <div class="stats-row" id="statsRow"></div>
     </div>
@@ -1407,13 +1476,10 @@
     <h2 class="page-title" id="studyDeckName"></h2>
     
     <!-- Study Filters -->
-    <div class="filter-bar" style="margin-bottom:20px;">
+    <div class="filter-bar" style="margin-bottom:12px;">
       <button class="filter-btn active" data-study-filter="all" onclick="setStudyFilter('all')">All</button>
       <button class="filter-btn" data-study-filter="learned" onclick="setStudyFilter('learned')">Learned</button>
       <button class="filter-btn" data-study-filter="not-learned" onclick="setStudyFilter('not-learned')">Not Learned</button>
-      <select class="filter-select" id="studyTagFilter" onchange="setStudyTagFilter(this.value)">
-        <option value="">All Tags</option>
-      </select>
       <button class="filter-btn" onclick="copyStudyCard()" title="Copy card" style="padding:6px 10px; opacity:0.6;">
         <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:14px; height:14px;">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
@@ -1424,6 +1490,15 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
         </svg>
       </button>
+    </div>
+    
+    <!-- Study Tag Filter Section -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
+        <div id="studySelectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
+      </div>
+      <div id="studyTagFilterContainer" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
     </div>
 
     <div class="progress-container">
@@ -1669,12 +1744,12 @@
   let knownCount = 0;
   let darkMode = false;
   let currentFilter = 'all';
-  let currentTagFilter = '';
+  let currentTagFilters = []; // Array of selected tags for filtering
   let studyCards = []; // Filtered cards for study mode
   let selectedTags = []; // Tags selected for the current card being added
   let pendingTags = []; // Tags created but not yet used in any card
   let studyFilter = 'all'; // Filter for study mode
-  let studyTagFilter = ''; // Tag filter for study mode
+  let studyTagFilters = []; // Tag filters for study mode
   
   // Bulk selection state
   let selectionMode = false;
@@ -1788,7 +1863,7 @@
   function openDeck(id) {
     currentDeckId = id;
     currentFilter = 'all';
-    currentTagFilter = '';
+    currentTagFilters = [];
     selectedTags = [];
     pendingTags = [];
     selectionMode = false;
@@ -2334,11 +2409,8 @@
     // Show filter bar
     filterBar.style.display = 'block';
 
-    // Update tag filter dropdown
-    const allTags = [...new Set(deck.cards.flatMap(c => c.tags || []))].sort();
-    const tagSelect = document.getElementById('tagFilter');
-    tagSelect.innerHTML = '<option value="">All Tags</option>' + 
-      allTags.map(tag => `<option value="${escapeHtml(tag)}" ${currentTagFilter === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('');
+    // Render tag filter UI
+    renderTagFilterUI();
 
     // Filter cards
     let filteredCards = deck.cards;
@@ -2430,8 +2502,12 @@
     } else if (currentFilter === 'not-learned') {
       filteredCards = filteredCards.filter(c => !c.learned);
     }
-    if (currentTagFilter) {
-      filteredCards = filteredCards.filter(c => (c.tags || []).includes(currentTagFilter));
+    if (currentTagFilters.length > 0) {
+      // Filter cards that have ANY of the selected tags (OR logic)
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return currentTagFilters.some(tag => cardTags.includes(tag));
+      });
     }
     return filteredCards;
   }
@@ -2442,48 +2518,106 @@
   }
 
   function setTagFilter(tag) {
-    currentTagFilter = tag;
+    // Toggle tag in the filter array
+    const index = currentTagFilters.indexOf(tag);
+    if (index === -1) {
+      currentTagFilters.push(tag);
+    } else {
+      currentTagFilters.splice(index, 1);
+    }
     
     // Show/hide delete tag bar
     const deleteTagBar = document.getElementById('deleteTagBar');
     const currentFilterTagName = document.getElementById('currentFilterTagName');
-    if (tag) {
+    if (currentTagFilters.length > 0) {
       deleteTagBar.style.display = 'flex';
-      currentFilterTagName.textContent = tag;
+      currentFilterTagName.textContent = currentTagFilters.join(', ');
     } else {
       deleteTagBar.style.display = 'none';
     }
     
     renderCards();
+    renderTagFilterUI();
   }
 
-  async function deleteAllWithTag() {
-    if (!currentTagFilter) return;
+  function clearTagFilters() {
+    currentTagFilters = [];
+    const deleteTagBar = document.getElementById('deleteTagBar');
+    deleteTagBar.style.display = 'none';
+    renderCards();
+    renderTagFilterUI();
+  }
+
+  function renderTagFilterUI() {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Get all unique tags from the deck
+    const allTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+    
+    const tagFilterContainer = document.getElementById('tagFilterContainer');
+    const selectedTagsContainer = document.getElementById('selectedTagsContainer');
+    
+    // Render available tags
+    if (allTags.size === 0) {
+      tagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3);">No tags available</span>';
+    } else {
+      tagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
+        const isSelected = currentTagFilters.includes(tag);
+        return `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
+      }).join('');
+    }
+    
+    // Render selected tags
+    if (currentTagFilters.length > 0) {
+      selectedTagsContainer.style.display = 'flex';
+      selectedTagsContainer.innerHTML = currentTagFilters.map(tag => 
+        `<span class="selected-tag-pill">${tag}<span class="remove-tag" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">&times;</span></span>`
+      ).join('') + `<button class="clear-tags-btn" onclick="clearTagFilters()">Clear</button>`;
+    } else {
+      selectedTagsContainer.style.display = 'none';
+    }
+  }
+
+  async function deleteAllWithTags() {
+    if (currentTagFilters.length === 0) return;
     
     const deck = getCurrentDeck();
     if (!deck) return;
     
-    const cardsWithTag = deck.cards.filter(card => card.tags && card.tags.includes(currentTagFilter));
+    // Find cards that have ANY of the selected tags
+    const cardsWithTags = deck.cards.filter(card => {
+      const cardTags = card.tags || [];
+      return currentTagFilters.some(tag => cardTags.includes(tag));
+    });
     
-    if (cardsWithTag.length === 0) {
-      alert('No cards found with this tag.');
+    if (cardsWithTags.length === 0) {
+      alert('No cards found with these tags.');
       return;
     }
     
+    const tagList = currentTagFilters.join(', ');
     const confirmed = await showConfirm(
-      'Delete All Cards with Tag',
-      `Are you sure you want to delete all ${cardsWithTag.length} card${cardsWithTag.length !== 1 ? 's' : ''} with the tag "${currentTagFilter}"? This action cannot be undone.`,
+      'Delete All Cards with Tags',
+      `Are you sure you want to delete all ${cardsWithTags.length} card${cardsWithTags.length !== 1 ? 's' : ''} with the tags "${tagList}"? This action cannot be undone.`,
       'Delete Cards'
     );
     if (!confirmed) return;
     
-    deck.cards = deck.cards.filter(card => !card.tags || !card.tags.includes(currentTagFilter));
+    // Remove cards that have ANY of the selected tags
+    deck.cards = deck.cards.filter(card => {
+      const cardTags = card.tags || [];
+      return !currentTagFilters.some(tag => cardTags.includes(tag));
+    });
     save();
     
-    // Reset tag filter
-    currentTagFilter = '';
-    document.getElementById('tagFilter').value = '';
-    document.getElementById('deleteTagBar').style.display = 'none';
+    // Reset tag filters
+    clearTagFilters();
     
     renderCards();
   }
@@ -2500,7 +2634,13 @@
   }
 
   function setStudyTagFilter(tag) {
-    studyTagFilter = tag;
+    // Toggle tag in the study filter array
+    const index = studyTagFilters.indexOf(tag);
+    if (index === -1) {
+      studyTagFilters.push(tag);
+    } else {
+      studyTagFilters.splice(index, 1);
+    }
     // Restart study with new filter
     restartStudyWithFilters();
   }
@@ -2518,12 +2658,57 @@
       filteredCards = filteredCards.filter(c => !c.learned);
     }
     
-    // Apply tag filter
-    if (studyTagFilter) {
-      filteredCards = filteredCards.filter(c => (c.tags || []).includes(studyTagFilter));
+    // Apply tag filters (OR logic - cards with ANY of the selected tags)
+    if (studyTagFilters.length > 0) {
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return studyTagFilters.some(tag => cardTags.includes(tag));
+      });
     }
     
     return filteredCards;
+  }
+
+  function renderStudyTagFilterUI() {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Get all unique tags from the deck
+    const allTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+    
+    const studyTagFilterContainer = document.getElementById('studyTagFilterContainer');
+    const studySelectedTagsContainer = document.getElementById('studySelectedTagsContainer');
+    
+    // Render available tags
+    if (allTags.size === 0) {
+      studyTagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3);">No tags available</span>';
+    } else {
+      studyTagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
+        const isSelected = studyTagFilters.includes(tag);
+        return `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
+      }).join('');
+    }
+    
+    // Render selected tags
+    if (studyTagFilters.length > 0) {
+      studySelectedTagsContainer.style.display = 'flex';
+      studySelectedTagsContainer.innerHTML = studyTagFilters.map(tag => 
+        `<span class="selected-tag-pill">${tag}<span class="remove-tag" onclick="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">&times;</span></span>`
+      ).join('') + `<button class="clear-tags-btn" onclick="clearStudyTagFilters()">Clear</button>`;
+    } else {
+      studySelectedTagsContainer.style.display = 'none';
+    }
+  }
+
+  function clearStudyTagFilters() {
+    studyTagFilters = [];
+    renderStudyTagFilterUI();
+    restartStudyWithFilters();
   }
 
   function restartStudyWithFilters() {
@@ -2726,18 +2911,15 @@
 
     // Reset study filters to match current view filters
     studyFilter = currentFilter;
-    studyTagFilter = currentTagFilter;
+    studyTagFilters = [...currentTagFilters];
     
     // Update study filter buttons
     document.querySelectorAll('[data-study-filter]').forEach(btn => {
       btn.classList.toggle('active', btn.dataset.studyFilter === studyFilter);
     });
     
-    // Populate study tag filter dropdown
-    const allTags = [...new Set(deck.cards.flatMap(c => c.tags || []))].sort();
-    const studyTagSelect = document.getElementById('studyTagFilter');
-    studyTagSelect.innerHTML = '<option value="">All Tags</option>' + 
-      allTags.map(tag => `<option value="${escapeHtml(tag)}" ${studyTagFilter === tag ? 'selected' : ''}>${escapeHtml(tag)}</option>`).join('');
+    // Populate study tag filter UI
+    renderStudyTagFilterUI();
 
     // Get filtered cards and shuffle them
     studyCards = shuffleArray([...getStudyFilteredCards()]);
