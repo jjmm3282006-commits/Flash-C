@@ -18,7 +18,7 @@ Download Termux from one of these sources:
 Copy this entire command and paste it into Termux:
 
 ```bash
-pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && cd Flash-C-cross-device-web-app-development-7ebac/public && mv * ../../ && cd ../../ && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc && source ~/.bashrc && echo "✓ Installation complete! You can now use 'run-server' to start the app" && python server.py
+pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && cd Flash-C-cross-device-web-app-development-7ebac/public && mv * ../../ && cd ../../ && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && printf '#!/bin/bash\nif [ "$1" = "fc" ] && [ "$2" = "server" ]; then\n  cd ~/flashcard && python server.py "${@:3}"\nelse\n  echo "Usage: run fc server"\n  echo "  Starts the Flashcard Maker server"\n  echo ""\n  echo "Options:"\n  echo "  run fc server --force-update    Force check for updates"\n  echo "  run fc server --no-update       Skip auto-update check"\nfi' > /data/data/com.termux/files/usr/bin/run && chmod +x /data/data/com.termux/files/usr/bin/run && echo "✓ Installation complete! You can now use 'run fc server' to start the app" && python server.py
 ```
 
 **What this does:**
@@ -26,7 +26,7 @@ pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd 
 - Installs Python and download tools
 - Downloads the flashcard app
 - Extracts the files from the public folder
-- Sets up the `run-server` command for easy access
+- Sets up the `run fc server` command for easy access
 - Starts the web server with auto-update enabled
 
 **Note:** The server will automatically check for updates every time it starts. You'll see messages like:
@@ -59,10 +59,10 @@ http://localhost:8000/flashcard.html
 ### Starting the Server
 After the first setup, you can simply type:
 ```bash
-run-server
+run fc server
 ```
 
-This shortcut command was automatically set up during installation. It will start the server from anywhere in Termux.
+This command was automatically set up during installation. It will start the server from anywhere in Termux.
 
 Alternatively, you can still use the full command:
 ```bash
@@ -77,7 +77,7 @@ Press `Ctrl+C` in the Termux terminal.
 To keep the server running when you switch to other apps:
 ```bash
 termux-wake-lock
-run-server
+run fc server
 ```
 
 To stop the wake lock later:
@@ -85,13 +85,12 @@ To stop the wake lock later:
 termux-wake-unlock
 ```
 
-### About the `run-server` Command
-The `run-server` command is a shortcut that was automatically set up during installation. It's stored in your `~/.bashrc` file and allows you to start the server from anywhere in Termux without navigating to the flashcard folder.
+### About the `run fc server` Command
+The `run fc server` command is a script that was automatically set up during installation. It's stored in your system's bin directory and allows you to start the server from anywhere in Termux without navigating to the flashcard folder.
 
 If you ever need to set it up manually (for example, if you reinstall Termux), run:
 ```bash
-echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc
-source ~/.bashrc
+printf '#!/bin/bash\nif [ "$1" = "fc" ] && [ "$2" = "server" ]; then\n  cd ~/flashcard && python server.py "${@:3}"\nelse\n  echo "Usage: run fc server"\n  echo "  Starts the Flashcard Maker server"\n  echo ""\n  echo "Options:"\n  echo "  run fc server --force-update    Force check for updates"\n  echo "  run fc server --no-update       Skip auto-update check"\nfi' > /data/data/com.termux/files/usr/bin/run && chmod +x /data/data/com.termux/files/usr/bin/run
 ```
 
 ---
@@ -118,7 +117,7 @@ To access the app from another device on the same WiFi network:
 
 **Good news!** The app now updates automatically when you start the server. Just run:
 ```bash
-run-server
+run fc server
 ```
 
 The server will check for updates and apply them automatically if available. You'll see messages like:
@@ -133,12 +132,12 @@ Update complete!
 
 If you want to force an update check:
 ```bash
-run-server --force-update
+run fc server --force-update
 ```
 
 If you want to skip the auto-update:
 ```bash
-run-server --no-update
+run fc server --no-update
 ```
 
 ### Manual Update (Fallback)
@@ -154,7 +153,7 @@ mv * ../../
 cd ../../
 rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip
 chmod +x server.py
-python server.py
+run fc server
 ```
 
 ---
@@ -163,7 +162,7 @@ python server.py
 
 ### "Port 8000 already in use"
 The server is already running. Either:
-- Stop it first with `Ctrl+C`, then start again
+- Stop it first with `Ctrl+C`, then run `run fc server` again
 - Or use a different port by editing `server.py` and changing `PORT = 8000` to `PORT = 8080`
 
 ### "wget: command not found"
@@ -198,7 +197,7 @@ mv * ../../
 cd ../../
 rm -rf Flash-C-cross-device-web-app-development-7ebac
 chmod +x server.py
-python server.py
+run fc server
 ```
 
 ---
@@ -217,21 +216,20 @@ If you prefer to download files separately:
    ```
    (Tap "Allow" when prompted)
 
-3. Copy the files:
+3. Copy the files and set up the command:
    ```bash
    mkdir -p ~/flashcard
    cd ~/flashcard
    cp ~/storage/downloads/flashcard.html .
    cp ~/storage/downloads/server.py .
    chmod +x server.py
-   echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc
-   source ~/.bashrc
-   python server.py
+   printf '#!/bin/bash\nif [ "$1" = "fc" ] && [ "$2" = "server" ]; then\n  cd ~/flashcard && python server.py "${@:3}"\nelse\n  echo "Usage: run fc server"\n  echo "  Starts the Flashcard Maker server"\n  echo ""\n  echo "Options:"\n  echo "  run fc server --force-update    Force check for updates"\n  echo "  run fc server --no-update       Skip auto-update check"\nfi' > /data/data/com.termux/files/usr/bin/run && chmod +x /data/data/com.termux/files/usr/bin/run
+   run fc server
    ```
 
 4. Open: `http://localhost:8000/flashcard.html`
 
-**Note:** The `run-server` command has been set up for you. From now on, you can just type `run-server` from anywhere to start the server.
+**Note:** The `run fc server` command has been set up for you. From now on, you can just type `run fc server` from anywhere to start the server.
 
 ---
 
@@ -243,3 +241,4 @@ If you're stuck, here's what to check:
 3. ✅ You see "Starting server on http://localhost:8000"
 4. ✅ You're opening `http://localhost:8000/flashcard.html` in your browser
 5. ✅ You granted camera permission when prompted
+6. ✅ You can use `run fc server` to start the app from anywhere
