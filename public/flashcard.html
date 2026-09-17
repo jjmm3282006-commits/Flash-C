@@ -372,6 +372,15 @@
 
 
   /* Flashcard List */
+  .cards-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg2);
+    margin-bottom: 16px;
+  }
+
   .flashcard-item {
     background: var(--bg2);
     border: 1px solid var(--border);
@@ -1541,7 +1550,9 @@
       </label>
     </div>
 
-    <div id="cardsList"></div>
+    <div class="cards-container">
+      <div id="cardsList"></div>
+    </div>
 
     <div id="studySection" style="display:none">
       <button class="btn btn-success btn-full" style="padding:14px; font-size:15px; margin-top:12px;" onclick="startStudy()">
