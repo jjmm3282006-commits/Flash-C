@@ -2419,8 +2419,11 @@
     } else if (currentFilter === 'not-learned') {
       filteredCards = filteredCards.filter(c => !c.learned);
     }
-    if (currentTagFilter) {
-      filteredCards = filteredCards.filter(c => (c.tags || []).includes(currentTagFilter));
+    if (currentTagFilters.length > 0) {
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return currentTagFilters.some(tag => cardTags.includes(tag));
+      });
     }
 
     // Update stats
