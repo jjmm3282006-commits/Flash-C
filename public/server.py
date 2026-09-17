@@ -35,7 +35,9 @@ def check_for_updates():
         return None
 
 def download_and_update():
-    """Download and apply updates from GitHub"""
+    """Download and apply updates from GitHub
+    Returns: (server_updated, success)
+    """
     try:
         print("Downloading update...")
         url = f"https://github.com/{GITHUB_REPO}/archive/refs/heads/{GITHUB_BRANCH}.zip"
@@ -50,7 +52,21 @@ def download_and_update():
         
         # Move files from public folder
         source_dir = f"temp_update/Flash-C-{GITHUB_BRANCH}/public"
+        server_updated = False
+        
         if os.path.exists(source_dir):
+            # Check if server.py will be updated
+            new_server_path = os.path.join(source_dir, 'server.py')
+            if os.path.exists(new_server_path):
+                # Compare server.py files
+                with open('server.py', 'rb') as f:
+                    old_server = f.read()
+                with open(new_server_path, 'rb') as f:
+                    new_server = f.read()
+                if old_server != new_server:
+                    server_updated = True
+                    print("Note: server.py has been updated")
+            
             # Remove old files except server.py and version.txt
             for item in os.listdir('.'):
                 if item not in ['server.py', 'version.txt', 'update.zip', 'temp_update']:
@@ -74,8 +90,7 @@ def download_and_update():
         shutil.rmtree("temp_update")
         os.remove(zip_path)
         
-        print("Update complete!")
-        return True
+        return server_updated, True
     except Exception as e:
         print(f"Update failed: {e}")
         # Cleanup on failure
@@ -83,7 +98,7 @@ def download_and_update():
             shutil.rmtree("temp_update")
         if os.path.exists("update.zip"):
             os.remove("update.zip")
-        return False
+        return False, False
 
 def auto_update():
     """Check for and apply updates if available"""
@@ -93,22 +108,27 @@ def auto_update():
     latest_version = check_for_updates()
     if latest_version is None:
         print("Skipping auto-update (could not check)")
-        return False
+        return False, False
     
     print(f"Latest version: {latest_version}")
     
     if current_version != latest_version:
-        print(f"New version available! Updating...")
-        if download_and_update():
+        print(f"New version available! Updating in background...")
+        server_updated, success = download_and_update()
+        if success:
             # Update version file
             with open(VERSION_FILE, 'w') as f:
                 f.write(latest_version)
-            print("Please restart the server to use the new version.")
-            return True
+            if server_updated:
+                print("✓ Update complete! server.py was updated - restart required")
+                return True, True
+            else:
+                print("✓ Update complete! Files updated - server continues running")
+                return True, False
     else:
         print("You're up to date!")
     
-    return False
+    return False, False
 
 class Handler(http.server.SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs):
@@ -126,10 +146,13 @@ if __name__ == "__main__":
     
     # Auto-update unless disabled
     if not args.no_update:
-        updated = auto_update()
-        if updated and not args.force_update:
-            print("\nUpdate applied. Restarting server...")
+        updated, server_updated = auto_update()
+        if updated and server_updated and not args.force_update:
+            print("\nserver.py was updated. Restarting server...")
             os.execv(sys.executable, ['python'] + sys.argv)
+        elif updated and not server_updated:
+            print("\n✓ Files updated successfully! Server continues running with new files.")
+            print("  (No restart needed - only server.py changes require restart)\n")
     
     print(f"\nStarting server on http://localhost:{PORT}")
     print(f"Open your browser to: http://localhost:{PORT}/flashcard.html")
