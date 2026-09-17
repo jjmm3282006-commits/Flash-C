@@ -742,6 +742,83 @@
     color: var(--text);
   }
 
+  /* Tag Dropdown */
+  .tag-dropdown-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .tag-dropdown-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .tag-dropdown-btn:hover {
+    background: var(--bg3);
+  }
+
+  .tag-dropdown-btn svg {
+    transition: transform 0.2s;
+  }
+
+  .tag-dropdown-btn.open svg {
+    transform: rotate(180deg);
+  }
+
+  .tag-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    padding: 8px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .tag-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .tag-dropdown-item:hover {
+    background: var(--bg3);
+  }
+
+  .tag-dropdown-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .tag-dropdown-item label {
+    flex: 1;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
   /* Tag Pills */
   .tag-pill {
     display: inline-block;
@@ -1429,7 +1506,17 @@
           <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
           <div id="selectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
         </div>
-        <div id="tagFilterContainer" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+        <div class="tag-dropdown-container">
+          <button class="tag-dropdown-btn" onclick="toggleTagDropdown()">
+            <span id="tagDropdownLabel">Select Tags</span>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="tagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+            <div id="tagFilterContainer"></div>
+          </div>
+        </div>
       </div>
       
       <div id="deleteTagBar" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg3); border-radius:6px; align-items:center; justify-content:space-between;">
@@ -1498,7 +1585,17 @@
         <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
         <div id="studySelectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
       </div>
-      <div id="studyTagFilterContainer" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+      <div class="tag-dropdown-container">
+        <button class="tag-dropdown-btn" onclick="toggleStudyTagDropdown()">
+          <span id="studyTagDropdownLabel">Select Tags</span>
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+          </svg>
+        </button>
+        <div id="studyTagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+          <div id="studyTagFilterContainer"></div>
+        </div>
+      </div>
     </div>
 
     <div class="progress-container">
@@ -2521,9 +2618,6 @@
   }
 
   function setTagFilter(tag) {
-    console.log('setTagFilter called with:', tag);
-    console.log('Current filters before:', currentTagFilters);
-    
     // Toggle tag in the filter array
     const index = currentTagFilters.indexOf(tag);
     if (index === -1) {
@@ -2531,8 +2625,6 @@
     } else {
       currentTagFilters.splice(index, 1);
     }
-    
-    console.log('Current filters after:', currentTagFilters);
     
     // Show/hide delete tag bar
     const deleteTagBar = document.getElementById('deleteTagBar');
@@ -2557,8 +2649,6 @@
   }
 
   function renderTagFilterUI() {
-    console.log('renderTagFilterUI called, currentTagFilters:', currentTagFilters);
-    
     const deck = getCurrentDeck();
     if (!deck) return;
     
@@ -2570,20 +2660,29 @@
       }
     });
     
-    console.log('All tags in deck:', Array.from(allTags));
-    
     const tagFilterContainer = document.getElementById('tagFilterContainer');
     const selectedTagsContainer = document.getElementById('selectedTagsContainer');
+    const tagDropdownLabel = document.getElementById('tagDropdownLabel');
     
-    // Render available tags
+    // Update dropdown label
+    if (currentTagFilters.length === 0) {
+      tagDropdownLabel.textContent = 'Select Tags';
+    } else if (currentTagFilters.length === 1) {
+      tagDropdownLabel.textContent = currentTagFilters[0];
+    } else {
+      tagDropdownLabel.textContent = `${currentTagFilters.length} tags selected`;
+    }
+    
+    // Render available tags as checkboxes
     if (allTags.size === 0) {
-      tagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3);">No tags available</span>';
+      tagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3); padding:8px;">No tags available</span>';
     } else {
       tagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
         const isSelected = currentTagFilters.includes(tag);
-        const html = `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
-        console.log(`Rendering tag button: ${tag}, isSelected: ${isSelected}`);
-        return html;
+        return `<div class="tag-dropdown-item">
+          <input type="checkbox" id="tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}" ${isSelected ? 'checked' : ''} onchange="setTagFilter('${tag.replace(/'/g, "\\'")}')">
+          <label for="tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
+        </div>`;
       }).join('');
     }
     
@@ -2595,6 +2694,33 @@
       ).join('') + `<button class="clear-tags-btn" onclick="clearTagFilters()">Clear</button>`;
     } else {
       selectedTagsContainer.style.display = 'none';
+    }
+  }
+
+  function toggleTagDropdown() {
+    const menu = document.getElementById('tagDropdownMenu');
+    const btn = document.querySelector('.tag-dropdown-btn');
+    const isOpen = menu.style.display !== 'none';
+    
+    menu.style.display = isOpen ? 'none' : 'block';
+    btn.classList.toggle('open', !isOpen);
+    
+    // Close dropdown when clicking outside
+    if (!isOpen) {
+      setTimeout(() => {
+        document.addEventListener('click', closeTagDropdownOnClickOutside);
+      }, 0);
+    }
+  }
+
+  function closeTagDropdownOnClickOutside(e) {
+    const container = document.querySelector('.tag-dropdown-container');
+    if (container && !container.contains(e.target)) {
+      const menu = document.getElementById('tagDropdownMenu');
+      const btn = document.querySelector('.tag-dropdown-btn');
+      menu.style.display = 'none';
+      btn.classList.remove('open');
+      document.removeEventListener('click', closeTagDropdownOnClickOutside);
     }
   }
 
@@ -2697,14 +2823,27 @@
     
     const studyTagFilterContainer = document.getElementById('studyTagFilterContainer');
     const studySelectedTagsContainer = document.getElementById('studySelectedTagsContainer');
+    const studyTagDropdownLabel = document.getElementById('studyTagDropdownLabel');
     
-    // Render available tags
+    // Update dropdown label
+    if (studyTagFilters.length === 0) {
+      studyTagDropdownLabel.textContent = 'Select Tags';
+    } else if (studyTagFilters.length === 1) {
+      studyTagDropdownLabel.textContent = studyTagFilters[0];
+    } else {
+      studyTagDropdownLabel.textContent = `${studyTagFilters.length} tags selected`;
+    }
+    
+    // Render available tags as checkboxes
     if (allTags.size === 0) {
-      studyTagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3);">No tags available</span>';
+      studyTagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3); padding:8px;">No tags available</span>';
     } else {
       studyTagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
         const isSelected = studyTagFilters.includes(tag);
-        return `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
+        return `<div class="tag-dropdown-item">
+          <input type="checkbox" id="study-tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}" ${isSelected ? 'checked' : ''} onchange="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">
+          <label for="study-tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
+        </div>`;
       }).join('');
     }
     
@@ -2723,6 +2862,33 @@
     studyTagFilters = [];
     renderStudyTagFilterUI();
     restartStudyWithFilters();
+  }
+
+  function toggleStudyTagDropdown() {
+    const menu = document.getElementById('studyTagDropdownMenu');
+    const btn = document.querySelector('#studyView .tag-dropdown-btn');
+    const isOpen = menu.style.display !== 'none';
+    
+    menu.style.display = isOpen ? 'none' : 'block';
+    btn.classList.toggle('open', !isOpen);
+    
+    // Close dropdown when clicking outside
+    if (!isOpen) {
+      setTimeout(() => {
+        document.addEventListener('click', closeStudyTagDropdownOnClickOutside);
+      }, 0);
+    }
+  }
+
+  function closeStudyTagDropdownOnClickOutside(e) {
+    const container = document.querySelector('#studyView .tag-dropdown-container');
+    if (container && !container.contains(e.target)) {
+      const menu = document.getElementById('studyTagDropdownMenu');
+      const btn = document.querySelector('#studyView .tag-dropdown-btn');
+      menu.style.display = 'none';
+      btn.classList.remove('open');
+      document.removeEventListener('click', closeStudyTagDropdownOnClickOutside);
+    }
   }
 
   function restartStudyWithFilters() {
