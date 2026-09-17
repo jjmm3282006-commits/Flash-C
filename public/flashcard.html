@@ -2518,6 +2518,9 @@
   }
 
   function setTagFilter(tag) {
+    console.log('setTagFilter called with:', tag);
+    console.log('Current filters before:', currentTagFilters);
+    
     // Toggle tag in the filter array
     const index = currentTagFilters.indexOf(tag);
     if (index === -1) {
@@ -2525,6 +2528,8 @@
     } else {
       currentTagFilters.splice(index, 1);
     }
+    
+    console.log('Current filters after:', currentTagFilters);
     
     // Show/hide delete tag bar
     const deleteTagBar = document.getElementById('deleteTagBar');
@@ -2549,6 +2554,8 @@
   }
 
   function renderTagFilterUI() {
+    console.log('renderTagFilterUI called, currentTagFilters:', currentTagFilters);
+    
     const deck = getCurrentDeck();
     if (!deck) return;
     
@@ -2560,6 +2567,8 @@
       }
     });
     
+    console.log('All tags in deck:', Array.from(allTags));
+    
     const tagFilterContainer = document.getElementById('tagFilterContainer');
     const selectedTagsContainer = document.getElementById('selectedTagsContainer');
     
@@ -2569,7 +2578,9 @@
     } else {
       tagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
         const isSelected = currentTagFilters.includes(tag);
-        return `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
+        const html = `<button class="filter-tag-btn ${isSelected ? 'selected' : ''}" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">${tag}</button>`;
+        console.log(`Rendering tag button: ${tag}, isSelected: ${isSelected}`);
+        return html;
       }).join('');
     }
     
