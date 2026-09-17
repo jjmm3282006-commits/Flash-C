@@ -1235,6 +1235,26 @@
     gap: 12px;
   }
 
+  .modal-body textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+
+  .modal-body textarea:focus {
+    border-color: var(--accent);
+    background: var(--bg2);
+  }
+
   .edit-tags-section {
     display: flex;
     flex-direction: column;
@@ -1661,8 +1681,8 @@
         <button class="modal-close" onclick="closeEditModal()">&times;</button>
       </div>
       <div class="modal-body">
-        <input type="text" id="editFront" placeholder="Front (question or term)...">
-        <input type="text" id="editBack" placeholder="Back (answer or definition)...">
+        <textarea id="editFront" placeholder="Front (question or term)..." rows="3"></textarea>
+        <textarea id="editBack" placeholder="Back (answer or definition)..." rows="3"></textarea>
         <div class="edit-tags-section">
           <label>Tags:</label>
           <div class="edit-tag-tabs-container">
