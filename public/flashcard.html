@@ -1392,19 +1392,176 @@
     padding: 20px !important;
   }
 
-  /* Responsive */
+  /* Mobile Responsive */
   @media (max-width: 640px) {
     .deck-grid { grid-template-columns: 1fr; }
     .study-card-text { font-size: 18px; }
     .study-card-face { padding: 24px 20px; }
-    .page-title { font-size: 26px; }
-    main { padding: 24px 16px; }
+    .page-title { font-size: 24px; }
+    main { padding: 16px 12px; }
     .form-row { flex-direction: column; }
+    
+    /* Cards container - smaller on mobile */
+    .cards-container { max-height: 400px; }
+    
+    /* Header buttons - better touch targets */
+    .icon-btn, .theme-btn {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 10px;
+    }
+    
+    /* Filter bar - wrap properly */
+    .filter-bar {
+      gap: 6px;
+    }
+    
+    .filter-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+      min-height: 36px;
+    }
+    
+    /* Tag dropdown - full width on mobile */
+    .tag-dropdown-container {
+      max-width: 100%;
+    }
+    
+    .tag-dropdown-menu {
+      max-height: 250px;
+    }
+    
+    /* Modals - full width on mobile */
+    .modal-content {
+      width: 95%;
+      max-width: 100%;
+      margin: 10px;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    
+    .modal-header {
+      padding: 16px;
+    }
+    
+    .modal-footer {
+      padding: 16px;
+      flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+      width: 100%;
+    }
+    
+    /* Study controls - stack on mobile */
+    .study-controls {
+      flex-direction: column;
+    }
+    
+    .study-controls .btn {
+      width: 100%;
+    }
+    
+    /* Bulk actions - wrap */
+    .bulk-actions-bar {
+      flex-wrap: wrap;
+    }
+    
+    .bulk-btn {
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+    
+    /* Stats row - wrap */
+    .stats-row {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    /* Flashcard items - better mobile layout */
+    .flashcard-item {
+      padding: 12px;
+    }
+    
+    .flashcard-content {
+      font-size: 14px;
+    }
+    
+    /* Deck cards - better mobile layout */
+    .deck-card {
+      padding: 16px;
+    }
+    
+    /* Study card - fit mobile */
+    .study-card-container {
+      min-height: 250px;
+    }
+    
+    /* Buttons - better touch targets */
+    .btn {
+      min-height: 44px;
+      padding: 12px 20px;
+    }
+    
+    .select-btn {
+      min-height: 36px;
+      padding: 8px 12px;
+    }
+    
+    /* P2P QR code - smaller on mobile */
+    .qr-container {
+      padding: 12px;
+    }
+    
+    #qrcode img, #qrcode canvas {
+      max-width: 200px !important;
+      max-height: 200px !important;
+    }
+    
+    /* Delete tag bar - stack on mobile */
+    #deleteTagBar {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start !important;
+    }
+  }
+  
+  /* Extra small screens */
+  @media (max-width: 360px) {
+    .page-title { font-size: 20px; }
+    .study-card-text { font-size: 16px; }
+    .filter-btn { padding: 6px 10px; font-size: 12px; }
   }
 
-  /* iOS fix */
+  /* iOS fix - prevent zoom on input focus */
   @media screen and (max-width: 768px) {
-    input[type="text"] { font-size: 16px; }
+    input[type="text"], textarea, select { font-size: 16px; }
+  }
+  
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets on touch devices */
+    .flashcard-delete,
+    .flashcard-edit,
+    .flashcard-copy {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 12px;
+    }
+    
+    .tag-remove {
+      min-width: 32px;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .deck-delete {
+      opacity: 1 !important;
+    }
   }
 </style>
 </head>
