@@ -727,14 +727,15 @@
   }
 
   .clear-tags-btn {
-    padding: 3px 8px;
+    padding: 8px 12px;
     border: 1px solid var(--border);
-    border-radius: 4px;
+    border-radius: 6px;
     background: var(--bg2);
     color: var(--text2);
-    font-size: 11px;
+    font-size: 13px;
     cursor: pointer;
     transition: all 0.2s;
+    white-space: nowrap;
   }
 
   .clear-tags-btn:hover {
@@ -1502,20 +1503,19 @@
       
       <!-- Tag Filter Section -->
       <div style="margin-top:12px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-          <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
-          <div id="selectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
-        </div>
-        <div class="tag-dropdown-container">
-          <button class="tag-dropdown-btn" onclick="toggleTagDropdown()">
-            <span id="tagDropdownLabel">Select Tags</span>
-            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
-          </button>
-          <div id="tagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
-            <div id="tagFilterContainer"></div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="tag-dropdown-container" style="flex:1;">
+            <button class="tag-dropdown-btn" onclick="toggleTagDropdown()">
+              <span id="tagDropdownLabel">Select Tags</span>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="tagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+              <div id="tagFilterContainer"></div>
+            </div>
           </div>
+          <button id="clearTagsBtn" class="clear-tags-btn" onclick="clearTagFilters()" style="display:none;">Clear</button>
         </div>
       </div>
       
@@ -1581,20 +1581,19 @@
     
     <!-- Study Tag Filter Section -->
     <div style="margin-bottom:20px;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span style="font-size:12px; color:var(--text3); text-transform:uppercase; letter-spacing:0.5px;">Filter by Tags</span>
-        <div id="studySelectedTagsContainer" style="display:none; flex-wrap:wrap; gap:6px; align-items:center;"></div>
-      </div>
-      <div class="tag-dropdown-container">
-        <button class="tag-dropdown-btn" onclick="toggleStudyTagDropdown()">
-          <span id="studyTagDropdownLabel">Select Tags</span>
-          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-          </svg>
-        </button>
-        <div id="studyTagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
-          <div id="studyTagFilterContainer"></div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="tag-dropdown-container" style="flex:1;">
+          <button class="tag-dropdown-btn" onclick="toggleStudyTagDropdown()">
+            <span id="studyTagDropdownLabel">Select Tags</span>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="studyTagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+            <div id="studyTagFilterContainer"></div>
+          </div>
         </div>
+        <button id="studyClearTagsBtn" class="clear-tags-btn" onclick="clearStudyTagFilters()" style="display:none;">Clear</button>
       </div>
     </div>
 
@@ -2661,8 +2660,8 @@
     });
     
     const tagFilterContainer = document.getElementById('tagFilterContainer');
-    const selectedTagsContainer = document.getElementById('selectedTagsContainer');
     const tagDropdownLabel = document.getElementById('tagDropdownLabel');
+    const clearTagsBtn = document.getElementById('clearTagsBtn');
     
     // Update dropdown label
     if (currentTagFilters.length === 0) {
@@ -2672,6 +2671,9 @@
     } else {
       tagDropdownLabel.textContent = `${currentTagFilters.length} tags selected`;
     }
+    
+    // Show/hide clear button
+    clearTagsBtn.style.display = currentTagFilters.length > 0 ? 'block' : 'none';
     
     // Render available tags as checkboxes
     if (allTags.size === 0) {
@@ -2684,16 +2686,6 @@
           <label for="tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
         </div>`;
       }).join('');
-    }
-    
-    // Render selected tags
-    if (currentTagFilters.length > 0) {
-      selectedTagsContainer.style.display = 'flex';
-      selectedTagsContainer.innerHTML = currentTagFilters.map(tag => 
-        `<span class="selected-tag-pill">${tag}<span class="remove-tag" onclick="setTagFilter('${tag.replace(/'/g, "\\'")}')">&times;</span></span>`
-      ).join('') + `<button class="clear-tags-btn" onclick="clearTagFilters()">Clear</button>`;
-    } else {
-      selectedTagsContainer.style.display = 'none';
     }
   }
 
@@ -2822,8 +2814,8 @@
     });
     
     const studyTagFilterContainer = document.getElementById('studyTagFilterContainer');
-    const studySelectedTagsContainer = document.getElementById('studySelectedTagsContainer');
     const studyTagDropdownLabel = document.getElementById('studyTagDropdownLabel');
+    const studyClearTagsBtn = document.getElementById('studyClearTagsBtn');
     
     // Update dropdown label
     if (studyTagFilters.length === 0) {
@@ -2833,6 +2825,9 @@
     } else {
       studyTagDropdownLabel.textContent = `${studyTagFilters.length} tags selected`;
     }
+    
+    // Show/hide clear button
+    studyClearTagsBtn.style.display = studyTagFilters.length > 0 ? 'block' : 'none';
     
     // Render available tags as checkboxes
     if (allTags.size === 0) {
@@ -2845,16 +2840,6 @@
           <label for="study-tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
         </div>`;
       }).join('');
-    }
-    
-    // Render selected tags
-    if (studyTagFilters.length > 0) {
-      studySelectedTagsContainer.style.display = 'flex';
-      studySelectedTagsContainer.innerHTML = studyTagFilters.map(tag => 
-        `<span class="selected-tag-pill">${tag}<span class="remove-tag" onclick="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">&times;</span></span>`
-      ).join('') + `<button class="clear-tags-btn" onclick="clearStudyTagFilters()">Clear</button>`;
-    } else {
-      studySelectedTagsContainer.style.display = 'none';
     }
   }
 
