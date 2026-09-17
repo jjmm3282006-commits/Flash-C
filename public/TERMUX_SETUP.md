@@ -18,7 +18,7 @@ Download Termux from one of these sources:
 Copy this entire command and paste it into Termux:
 
 ```bash
-pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && cd Flash-C-cross-device-web-app-development-7ebac/public && mv * ../../ && cd ../../ && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && python server.py
+pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd ~/flashcard && wget https://github.com/jjmm3282006-commits/Flash-C/archive/refs/heads/cross-device-web-app-development-7ebac.zip && unzip cross-device-web-app-development-7ebac.zip && cd Flash-C-cross-device-web-app-development-7ebac/public && mv * ../../ && cd ../../ && rm -rf Flash-C-cross-device-web-app-development-7ebac cross-device-web-app-development-7ebac.zip && chmod +x server.py && echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc && source ~/.bashrc && echo "✓ Installation complete! You can now use 'run-server' to start the app" && python server.py
 ```
 
 **What this does:**
@@ -26,6 +26,7 @@ pkg update -y && pkg install python wget unzip -y && mkdir -p ~/flashcard && cd 
 - Installs Python and download tools
 - Downloads the flashcard app
 - Extracts the files from the public folder
+- Sets up the `run-server` command for easy access
 - Starts the web server with auto-update enabled
 
 **Note:** The server will automatically check for updates every time it starts. You'll see messages like:
@@ -56,7 +57,14 @@ http://localhost:8000/flashcard.html
 ## How to Use the App
 
 ### Starting the Server
-After the first setup, you only need to run:
+After the first setup, you can simply type:
+```bash
+run-server
+```
+
+This shortcut command was automatically set up during installation. It will start the server from anywhere in Termux.
+
+Alternatively, you can still use the full command:
 ```bash
 cd ~/flashcard
 python server.py
@@ -69,13 +77,21 @@ Press `Ctrl+C` in the Termux terminal.
 To keep the server running when you switch to other apps:
 ```bash
 termux-wake-lock
-cd ~/flashcard
-python server.py
+run-server
 ```
 
 To stop the wake lock later:
 ```bash
 termux-wake-unlock
+```
+
+### About the `run-server` Command
+The `run-server` command is a shortcut that was automatically set up during installation. It's stored in your `~/.bashrc` file and allows you to start the server from anywhere in Termux without navigating to the flashcard folder.
+
+If you ever need to set it up manually (for example, if you reinstall Termux), run:
+```bash
+echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc
+source ~/.bashrc
 ```
 
 ---
@@ -102,22 +118,27 @@ To access the app from another device on the same WiFi network:
 
 **Good news!** The app now updates automatically when you start the server. Just run:
 ```bash
-cd ~/flashcard
-python server.py
+run-server
 ```
 
-The server will check for updates and apply them automatically if available.
+The server will check for updates and apply them automatically if available. You'll see messages like:
+```
+Current version: abc1234
+Latest version: def5678
+New version available! Updating...
+Update complete!
+```
 
 ### Manual Update Options
 
 If you want to force an update check:
 ```bash
-python server.py --force-update
+run-server --force-update
 ```
 
 If you want to skip the auto-update:
 ```bash
-python server.py --no-update
+run-server --no-update
 ```
 
 ### Manual Update (Fallback)
@@ -203,10 +224,14 @@ If you prefer to download files separately:
    cp ~/storage/downloads/flashcard.html .
    cp ~/storage/downloads/server.py .
    chmod +x server.py
+   echo "alias run-server='cd ~/flashcard && python server.py'" >> ~/.bashrc
+   source ~/.bashrc
    python server.py
    ```
 
 4. Open: `http://localhost:8000/flashcard.html`
+
+**Note:** The `run-server` command has been set up for you. From now on, you can just type `run-server` from anywhere to start the server.
 
 ---
 
