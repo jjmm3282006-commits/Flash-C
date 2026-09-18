@@ -2155,6 +2155,8 @@
       showView('cardsView');
       renderCards();
     } else if (cardsView.classList.contains('active')) {
+      // Reset undo stack when exiting deck
+      undoStack = [];
       showView('decksView');
       currentDeckId = null;
       renderDecks();
@@ -3699,13 +3701,47 @@
     });
   }
 
+  // Reset modal completely
+  function resetInputModal() {
+    const modal = document.getElementById('inputModal');
+    const titleEl = document.getElementById('inputModalTitle');
+    const messageEl = document.getElementById('inputModalMessage');
+    const inputEl = document.getElementById('inputModalField');
+    const cancelBtn = document.getElementById('inputModalCancelBtn');
+    const okBtn = document.getElementById('inputModalOkBtn');
+    
+    // Close modal
+    modal.classList.remove('active');
+    
+    // Reset all elements
+    titleEl.textContent = '';
+    messageEl.innerHTML = '';
+    inputEl.value = '';
+    inputEl.placeholder = '';
+    
+    // Reset button
+    okBtn.textContent = 'Confirm';
+    okBtn.className = 'btn btn-primary';
+    okBtn.disabled = false;
+    okBtn.style.opacity = '1';
+    okBtn.style.cursor = 'pointer';
+    
+    // Remove all event listeners by cloning buttons
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+  }
+
   // Custom Tag Removal Modal with search and live list
   function showTagRemovalModal(title, message, availableTags = []) {
     return new Promise((resolve) => {
-      // Ensure modal is fully closed before opening
-      const modal = document.getElementById('inputModal');
-      modal.classList.remove('active');
+      // Completely reset modal before opening
+      resetInputModal();
       
+      // Get fresh references after reset
+      const modal = document.getElementById('inputModal');
       const titleEl = document.getElementById('inputModalTitle');
       const messageEl = document.getElementById('inputModalMessage');
       const inputEl = document.getElementById('inputModalField');
@@ -3840,10 +3876,11 @@
   // Custom Tag Add Modal with search, live list, and new tag creation
   function showTagAddModal(title, message, availableTags = []) {
     return new Promise((resolve) => {
-      // Ensure modal is fully closed before opening
-      const modal = document.getElementById('inputModal');
-      modal.classList.remove('active');
+      // Completely reset modal before opening
+      resetInputModal();
       
+      // Get fresh references after reset
+      const modal = document.getElementById('inputModal');
       const titleEl = document.getElementById('inputModalTitle');
       const messageEl = document.getElementById('inputModalMessage');
       const inputEl = document.getElementById('inputModalField');

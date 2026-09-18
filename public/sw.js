@@ -1,4 +1,4 @@
-const CACHE_NAME = 'flashcard-maker-v37';
+const CACHE_NAME = 'flashcard-maker-v38';
 const urlsToCache = [
   '/',
   '/flashcard.html',
