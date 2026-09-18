@@ -3681,7 +3681,15 @@
       function updateSelectedCount() {
         const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
         countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+        
+        // Enable/disable the OK button based on selection
+        okBtn.disabled = checked === 0;
+        okBtn.style.opacity = checked === 0 ? '0.5' : '1';
+        okBtn.style.cursor = checked === 0 ? 'not-allowed' : 'pointer';
       }
+      
+      // Initial button state
+      updateSelectedCount();
       
       const cleanup = () => {
         modal.classList.remove('active');
@@ -3699,11 +3707,6 @@
       
       const onOk = async () => {
         const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
-        
-        if (selectedTags.length === 0) {
-          alert('Please select at least one tag to remove.');
-          return;
-        }
         
         // Show confirmation modal
         const confirmed = await showConfirm(
@@ -3823,7 +3826,15 @@
       function updateSelectedCount() {
         const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
         countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+        
+        // Enable/disable the OK button based on selection
+        okBtn.disabled = checked === 0;
+        okBtn.style.opacity = checked === 0 ? '0.5' : '1';
+        okBtn.style.cursor = checked === 0 ? 'not-allowed' : 'pointer';
       }
+      
+      // Initial button state
+      updateSelectedCount();
       
       const cleanup = () => {
         modal.classList.remove('active');
@@ -3841,11 +3852,6 @@
       
       const onOk = async () => {
         const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
-        
-        if (selectedTags.length === 0) {
-          alert('Please select at least one tag to add.');
-          return;
-        }
         
         cleanup();
         resolve(selectedTags);
