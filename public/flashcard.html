@@ -3187,15 +3187,17 @@
       }
     });
     
-    const tagName = await showTagInput('Add Tag', 'Select an existing tag or create a new one:', Array.from(existingTags).sort());
-    if (!tagName) return;
+    const tagsToAdd = await showTagAddModal('Add Tags', 'Select existing tags or create new ones:', Array.from(existingTags).sort());
+    if (!tagsToAdd || tagsToAdd.length === 0) return;
     
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id)) {
         if (!card.tags) card.tags = [];
-        if (!card.tags.includes(tagName)) {
-          card.tags.push(tagName);
-        }
+        tagsToAdd.forEach(tag => {
+          if (!card.tags.includes(tag)) {
+            card.tags.push(tag);
+          }
+        });
       }
     });
     
@@ -3728,6 +3730,175 @@
         if (e.target === modal) {
           onCancel();
         }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      searchInput.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Tag Add Modal with search, live list, and new tag creation
+  function showTagAddModal(title, message, availableTags = []) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Search tags or type to create new...';
+      
+      // Create searchable list with checkboxes and new tag option
+      const listHtml = `
+        <div style="margin-top:12px;">
+          <div id="tagSearchList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg2);">
+            ${availableTags.length > 0 ? availableTags.map(tag => `
+              <label class="tag-list-item" data-tag="${tag}" style="display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+                <input type="checkbox" class="tag-checkbox" value="${tag}" style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+                <span>${tag}</span>
+              </label>
+            `).join('') : '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">No existing tags</div>'}
+          </div>
+          <div id="newTagOption" style="display:none; margin-top:8px; padding:10px 12px; background:var(--bg3); border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg3)'" onclick="addNewTagFromSearch()">
+            <span style="font-size:14px; color:var(--accent);">+ Create new tag: <strong id="newTagName"></strong></span>
+          </div>
+          <div id="selectedTagsCount" style="margin-top:8px; font-size:12px; color:var(--text3);">0 tags selected</div>
+        </div>
+      `;
+      
+      messageEl.innerHTML = message + listHtml;
+      
+      // Change OK button to "Add Selected"
+      okBtn.textContent = 'Add Selected';
+      okBtn.className = 'btn btn-primary';
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      // Setup search filtering and new tag detection
+      const searchInput = inputEl;
+      const tagList = document.getElementById('tagSearchList');
+      const countDisplay = document.getElementById('selectedTagsCount');
+      const newTagOption = document.getElementById('newTagOption');
+      const newTagName = document.getElementById('newTagName');
+      
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const items = tagList.querySelectorAll('.tag-list-item');
+        let hasVisibleItems = false;
+        
+        items.forEach(item => {
+          const tag = item.getAttribute('data-tag').toLowerCase();
+          if (tag.includes(searchTerm)) {
+            item.style.display = 'flex';
+            hasVisibleItems = true;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        
+        // Show/hide new tag option
+        if (searchTerm && !availableTags.map(t => t.toLowerCase()).includes(searchTerm)) {
+          newTagOption.style.display = 'block';
+          newTagName.textContent = searchTerm;
+        } else {
+          newTagOption.style.display = 'none';
+        }
+      });
+      
+      // Track checkbox changes
+      const checkboxes = tagList.querySelectorAll('.tag-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+      
+      function updateSelectedCount() {
+        const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
+        countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+      }
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        okBtn.textContent = 'Confirm';
+        okBtn.className = 'btn btn-primary';
+        cancelBtn.removeEventListener('click', onCancel);
+        searchInput.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = async () => {
+        const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        
+        if (selectedTags.length === 0) {
+          alert('Please select at least one tag to add.');
+          return;
+        }
+        
+        cleanup();
+        resolve(selectedTags);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+        } else if (e.key === 'Enter') {
+          // If there's text in the input and it's not an existing tag, create it
+          const searchTerm = inputEl.value.trim();
+          if (searchTerm && !availableTags.map(t => t.toLowerCase()).includes(searchTerm.toLowerCase())) {
+            addNewTagFromSearch();
+          } else {
+            onOk();
+          }
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      // Global function to add new tag from search
+      window.addNewTagFromSearch = function() {
+        const searchTerm = inputEl.value.trim();
+        if (!searchTerm) return;
+        
+        // Create new checkbox and add to list
+        const newTag = searchTerm;
+        const newLabel = document.createElement('label');
+        newLabel.className = 'tag-list-item';
+        newLabel.setAttribute('data-tag', newTag);
+        newLabel.style.cssText = 'display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text); background:var(--bg3);';
+        newLabel.innerHTML = `
+          <input type="checkbox" class="tag-checkbox" value="${newTag}" checked style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+          <span>${newTag} <span style="color:var(--accent); font-size:12px;">(new)</span></span>
+        `;
+        
+        // Add to list and update available tags
+        tagList.appendChild(newLabel);
+        availableTags.push(newTag);
+        
+        // Clear search and hide new tag option
+        inputEl.value = '';
+        newTagOption.style.display = 'none';
+        
+        // Add event listener to new checkbox
+        const newCheckbox = newLabel.querySelector('.tag-checkbox');
+        newCheckbox.addEventListener('change', updateSelectedCount);
+        updateSelectedCount();
       };
       
       cancelBtn.addEventListener('click', onCancel);
