@@ -1,0 +1,4907 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Flashcard Maker</title>
+
+<!-- PWA Meta Tags -->
+<meta name="theme-color" content="#4299e1">
+<meta name="description" content="Create and study flashcards with P2P sharing">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Flashcards">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" type="image/svg+xml" href="icon.svg">
+<link rel="apple-touch-icon" href="icon.svg">
+
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  :root {
+    --bg: #fafbfc;
+    --bg2: #ffffff;
+    --bg3: #f5f7fa;
+    --text: #1a202c;
+    --text2: #4a5568;
+    --text3: #a0aec0;
+    --border: #e2e8f0;
+    --accent: #4299e1;
+    --accent2: #3182ce;
+    --success: #48bb78;
+    --success2: #38a169;
+    --danger: #f56565;
+    --danger2: #e53e3e;
+    --shadow: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.05), 0 2px 4px rgba(0,0,0,0.06);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.08), 0 4px 6px rgba(0,0,0,0.05);
+  }
+
+  .dark {
+    --bg: #1a202c;
+    --bg2: #2d3748;
+    --bg3: #4a5568;
+    --text: #f7fafc;
+    --text2: #cbd5e0;
+    --text3: #718096;
+    --border: #4a5568;
+    --shadow: 0 1px 3px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px rgba(0,0,0,0.25), 0 2px 4px rgba(0,0,0,0.3);
+    --shadow-lg: 0 10px 15px rgba(0,0,0,0.3), 0 4px 6px rgba(0,0,0,0.25);
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    transition: background 0.3s, color 0.3s;
+    -webkit-tap-highlight-color: transparent;
+    line-height: 1.6;
+  }
+
+  /* Global minimal scrollbar - light mode */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 2px;
+  }
+
+  /* Dark mode scrollbar */
+  .dark ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  /* Firefox */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(0, 0, 0, 0.1) transparent;
+  }
+
+  .dark * {
+    scrollbar-color: rgba(255, 255, 255, 0.1) transparent;
+  }
+
+  /* Header */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    backdrop-filter: blur(12px);
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: background 0.3s;
+    box-shadow: var(--shadow);
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .icon-btn {
+    background: var(--bg3);
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .icon-btn:hover {
+    background: var(--border);
+    color: var(--accent);
+  }
+
+  .icon-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  .back-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 6px;
+    color: var(--text2);
+    transition: background 0.2s, color 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .back-btn:hover { 
+    background: var(--bg3); 
+    color: var(--text);
+  }
+
+  .back-btn svg {
+    width: 20px;
+    height: 20px;
+  }
+
+  h1 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--text);
+    letter-spacing: -0.01em;
+  }
+
+  .theme-btn {
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    padding: 8px 12px;
+    border-radius: 6px;
+    color: var(--text2);
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+  }
+
+  .theme-btn:hover { 
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .theme-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  /* Main */
+  main {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 32px 20px;
+  }
+
+  .view { display: none; }
+  .view.active { display: block; animation: fadeIn 0.3s ease; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Typography */
+  .page-title {
+    font-size: 32px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    letter-spacing: -0.02em;
+  }
+
+  .page-subtitle {
+    font-size: 15px;
+    color: var(--text2);
+    margin-bottom: 32px;
+  }
+
+  /* Cards & Containers */
+  .card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 20px;
+    box-shadow: var(--shadow);
+    transition: all 0.3s;
+  }
+
+  /* Inputs */
+  input[type="text"] {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-size: 15px;
+    background: var(--bg2);
+    color: var(--text);
+    outline: none;
+    transition: all 0.2s;
+    font-family: inherit;
+  }
+
+  input[type="text"]:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px rgba(66, 153, 225, 0.1);
+  }
+
+  input[type="text"]::placeholder { color: var(--text3); }
+
+  /* Buttons */
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: inherit;
+  }
+
+  .btn:active { transform: scale(0.98); }
+
+  .btn-primary {
+    background: var(--accent);
+    color: white;
+  }
+
+  .btn-primary:hover { 
+    background: var(--accent2);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-success {
+    background: var(--success);
+    color: white;
+  }
+
+  .btn-success:hover { 
+    background: var(--success2);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-danger {
+    background: var(--danger);
+    color: white;
+  }
+
+  .btn-danger:hover { 
+    background: var(--danger2);
+    box-shadow: var(--shadow-md);
+  }
+
+  .btn-ghost {
+    background: var(--bg3);
+    color: var(--text2);
+    border: 1px solid var(--border);
+  }
+
+  .btn-ghost:hover { 
+    background: var(--border);
+    color: var(--text);
+  }
+
+  .btn-full { width: 100%; }
+
+  .btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+    transform: none !important;
+  }
+
+  /* Form Row */
+  .form-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .form-row input { flex: 1; }
+
+  .form-stack {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  /* Deck Grid */
+  .deck-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 16px;
+  }
+
+  .deck-card {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    transition: all 0.2s;
+    box-shadow: var(--shadow);
+  }
+
+  .deck-card:hover {
+    box-shadow: var(--shadow-lg);
+  }
+
+  .deck-name { 
+    font-weight: 600; 
+    font-size: 17px; 
+    margin-bottom: 6px;
+    color: var(--text);
+    word-break: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .deck-count { 
+    font-size: 14px; 
+    color: var(--text2);
+  }
+
+
+
+  /* Flashcard List */
+  .cards-container {
+    max-height: 500px;
+    overflow-y: auto;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: var(--bg2);
+    margin-bottom: 16px;
+  }
+
+  .flashcard-item {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 18px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    transition: all 0.2s;
+    overflow: hidden;
+  }
+
+  .flashcard-item:hover {
+    box-shadow: var(--shadow-md);
+  }
+
+  .flashcard-content { 
+    flex: 1; 
+    min-width: 0;
+    overflow: hidden;
+  }
+
+  .flashcard-front {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 6px;
+    color: var(--accent);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  .flashcard-back {
+    font-size: 14px;
+    color: var(--text2);
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    line-height: 1.5;
+  }
+
+  .flashcard-delete,
+  .flashcard-edit,
+  .flashcard-copy {
+    background: none;
+    border: none;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 6px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+  }
+  
+  .flashcard-delete:hover,
+  .flashcard-edit:hover,
+  .flashcard-copy:hover { 
+    background: var(--bg3);
+  }
+
+  .flashcard-edit:hover {
+    color: var(--accent);
+  }
+
+  .flashcard-copy:hover {
+    color: var(--success);
+  }
+
+  .flashcard-delete:hover { 
+    color: var(--danger);
+  }
+
+  .flashcard-delete svg,
+  .flashcard-edit svg,
+  .flashcard-copy svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Study Mode - 3D Flip Card */
+  .study-card-container {
+    perspective: 1000px;
+    margin: 28px 0;
+    cursor: pointer;
+  }
+
+  .study-card-inner {
+    position: relative;
+    width: 100%;
+    transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+  }
+
+  .study-card-inner.flipped {
+    transform: rotateY(180deg);
+  }
+
+  .study-card-face {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px;
+    text-align: center;
+    box-shadow: var(--shadow-lg);
+    overflow: hidden;
+  }
+
+  .study-card-front {
+    background: linear-gradient(135deg, #4299e1, #3182ce);
+    color: white;
+  }
+
+  .study-card-back {
+    background: linear-gradient(135deg, #48bb78, #38a169);
+    color: white;
+    transform: rotateY(180deg);
+  }
+
+  .study-card-text {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.5;
+    word-break: break-word;
+    overflow-wrap: break-word;
+    white-space: pre-wrap;
+    width: 100%;
+    max-height: 60vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 4px;
+  }
+
+  /* Minimal themed scrollbar inside cards */
+  .study-card-text::-webkit-scrollbar {
+    width: 2px;
+  }
+
+  .study-card-text::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .study-card-text::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 1px;
+  }
+
+  /* Firefox scrollbar */
+  .study-card-text {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.25) transparent;
+  }
+
+  .study-hint {
+    text-align: center;
+    font-size: 14px;
+    color: var(--text3);
+    margin-bottom: 20px;
+  }
+
+  /* Progress Bar */
+  .progress-container {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 12px;
+  }
+
+  .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: var(--bg3);
+    border-radius: 3px;
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.4s ease;
+  }
+
+  .progress-text {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text2);
+    white-space: nowrap;
+  }
+
+  /* Study Controls */
+  .study-controls {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+  }
+
+  .study-controls .btn { flex: 1; }
+
+  .study-result {
+    text-align: center;
+    padding: 48px 24px;
+  }
+
+  .study-result-title { 
+    font-size: 28px; 
+    font-weight: 700; 
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .study-result-text { 
+    color: var(--text2); 
+    margin-bottom: 32px;
+    font-size: 16px;
+  }
+
+  /* Empty State */
+  .empty-state {
+    text-align: center;
+    padding: 64px 20px;
+    color: var(--text3);
+  }
+
+  .empty-state-text { 
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* Section Label */
+  .section-label {
+    font-size: 12px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--text3);
+    margin-bottom: 12px;
+    margin-top: 24px;
+  }
+
+  /* Card Label */
+  .card-label {
+    font-weight: 500;
+    margin-bottom: 12px;
+    font-size: 14px;
+    color: var(--text2);
+  }
+
+  /* Filter Bar */
+  .filter-bar {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .filter-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .filter-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .filter-select {
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    outline: none;
+    transition: all 0.2s;
+  }
+
+  .filter-select:hover {
+    border-color: var(--text3);
+  }
+
+  /* Filter Tag Buttons */
+  .filter-tag-btn {
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .filter-tag-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .filter-tag-btn.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  /* Selected Tag Pills */
+  .selected-tag-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    background: var(--accent);
+    color: white;
+    font-size: 11px;
+  }
+
+  .selected-tag-pill .remove-tag {
+    cursor: pointer;
+    opacity: 0.8;
+    font-size: 14px;
+    line-height: 1;
+  }
+
+  .selected-tag-pill .remove-tag:hover {
+    opacity: 1;
+  }
+
+  .clear-tags-btn {
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+
+  .clear-tags-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  /* Tag Dropdown */
+  .tag-dropdown-container {
+    position: relative;
+    width: 100%;
+    max-width: 300px;
+  }
+
+  .tag-dropdown-btn {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text);
+    font-size: 13px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: all 0.2s;
+  }
+
+  .tag-dropdown-btn:hover {
+    background: var(--bg3);
+  }
+
+  .tag-dropdown-btn svg {
+    transition: transform 0.2s;
+  }
+
+  .tag-dropdown-btn.open svg {
+    transform: rotate(180deg);
+  }
+
+  .tag-dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 4px;
+    padding: 8px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    z-index: 100;
+    max-height: 200px;
+    overflow-y: auto;
+  }
+
+  .tag-dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 8px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .tag-dropdown-item:hover {
+    background: var(--bg3);
+  }
+
+  .tag-dropdown-item input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--accent);
+  }
+
+  .tag-dropdown-item label {
+    flex: 1;
+    cursor: pointer;
+    font-size: 13px;
+  }
+
+  /* Tag Pills */
+  .tag-pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    background: var(--bg3);
+    color: var(--text3);
+    font-size: 11px;
+    margin-right: 4px;
+    margin-top: 4px;
+    border: 1px solid var(--border);
+  }
+
+  /* Learned Indicator */
+  .learned-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--success);
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  .not-learned-indicator {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border);
+    flex-shrink: 0;
+    margin-top: 8px;
+  }
+
+  /* Stats Row */
+  .stats-row {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 12px;
+    font-size: 12px;
+    color: var(--text3);
+  }
+
+  .stat-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .stat-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  .stat-dot.learned {
+    background: var(--success);
+  }
+
+  .stat-dot.not-learned {
+    background: var(--text3);
+  }
+
+  /* Selection Mode */
+  .select-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg2);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .select-btn:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .select-btn.active {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .card-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    flex-shrink: 0;
+    accent-color: var(--accent);
+    margin: 0;
+  }
+
+  .bulk-actions-bar {
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-wrap: wrap;
+    box-shadow: var(--shadow);
+  }
+
+  .bulk-actions-bar .count {
+    font-weight: 500;
+    margin-right: auto;
+    color: var(--text2);
+    font-size: 13px;
+  }
+
+  .bulk-btn {
+    padding: 6px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text2);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .bulk-btn:hover {
+    background: var(--bg2);
+    color: var(--text);
+    border-color: var(--text3);
+  }
+
+  .bulk-btn.danger {
+    color: var(--danger);
+    border-color: var(--danger);
+    background: transparent;
+  }
+
+  .bulk-btn.danger:hover {
+    background: var(--danger);
+    color: white;
+  }
+
+  .bulk-select-all {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-size: 13px;
+    color: var(--text2);
+  }
+
+  .bulk-select-all label {
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  /* Tag Tabs */
+  .tag-tabs-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 0 4px;
+    position: relative;
+  }
+
+  .tag-tabs-wrapper {
+    flex: 1;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .tag-tabs {
+    display: flex;
+    gap: 2px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+    scroll-behavior: smooth;
+  }
+
+  .tag-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .tag-tabs-wrapper::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background: linear-gradient(to right, transparent, var(--bg2));
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s;
+  }
+
+  .tag-tabs-wrapper.has-scroll::after {
+    opacity: 1;
+  }
+
+  .tag-tab {
+    padding: 7px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-size: 13px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    position: relative;
+  }
+
+  .tag-tab:hover {
+    background: var(--bg2);
+    color: var(--text);
+  }
+
+  .tag-tab.selected {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+  }
+
+  .tag-tab .tag-remove {
+    margin-left: 16px;
+    padding: 6px 10px;
+    opacity: 0.6;
+    font-size: 14px;
+    cursor: pointer;
+    line-height: 1;
+    border-left: 1px solid rgba(0,0,0,0.1);
+    border-radius: 0 6px 6px 0;
+}
+
+.dark .tag-tab .tag-remove {
+    border-left-color: rgba(255,255,255,0.2);
+}
+
+.tag-tab .tag-remove:hover {
+    opacity: 1;
+    color: #e53e3e;
+    background: rgba(229, 62, 62, 0.1);
+}
+  .tag-add-btn {
+    padding: 7px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-size: 16px;
+    color: var(--text3);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .tag-add-btn:hover {
+    background: var(--bg2);
+    color: var(--accent);
+  }
+
+  .tag-action-btn {
+    padding: 7px 12px;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    border-bottom: none;
+    border-radius: 6px 6px 0 0;
+    font-size: 12px;
+    color: var(--text2);
+    cursor: pointer;
+    transition: all 0.2s;
+    flex-shrink: 0;
+    white-space: nowrap;
+  }
+
+  .tag-action-btn:hover {
+    background: var(--danger);
+    color: white;
+    border-color: var(--danger);
+  }
+
+  .new-tag-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 16px;
+    padding: 10px 12px;
+    background: var(--bg2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+  }
+
+  .new-tag-input input {
+    flex: 1;
+    padding: 6px 10px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .new-tag-input input:focus {
+    border-color: var(--accent);
+    background: var(--bg2);
+  }
+
+  /* Modal */
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    animation: fadeIn 0.2s;
+  }
+
+  #confirmModal {
+    z-index: 1100;
+  }
+
+  .modal.active {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-content {
+    background: var(--bg2);
+    border-radius: 12px;
+    width: 90%;
+    max-width: 500px;
+    max-height: 90vh;
+    overflow-y: auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+    animation: slideUp 0.3s;
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(20px);
+      opacity: 0;
+    }
+    to {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  }
+
+  .modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .modal-header h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  .modal-close {
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: var(--text3);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    transition: all 0.2s;
+  }
+
+  .modal-close:hover {
+    background: var(--bg3);
+    color: var(--text);
+  }
+
+  .modal-body {
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-body textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+    min-height: 80px;
+    transition: border-color 0.2s;
+  }
+
+  .modal-body textarea:focus {
+    border-color: var(--accent);
+    background: var(--bg2);
+  }
+
+  .edit-tags-section {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .edit-tags-section label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text2);
+  }
+
+  .edit-tag-tabs-container {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+  }
+
+  .edit-tag-tabs-container .tag-tabs {
+    overflow-x: auto;
+    scrollbar-width: none;
+    padding-bottom: 2px;
+  }
+
+  .edit-tag-tabs-container .tag-tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .modal-footer {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    padding: 20px 24px;
+    border-top: 1px solid var(--border);
+  }
+
+  /* QR Code Styles */
+  .qr-container {
+    display: flex;
+    justify-content: center;
+    margin: 24px 0;
+    padding: 20px;
+    background: white;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+
+  #qrcode {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+
+  #qrcode img, #qrcode canvas {
+    max-width: 100%;
+    height: auto;
+  }
+
+  .share-link-box {
+    display: flex;
+    gap: 8px;
+  }
+
+  .share-link-box input {
+    flex: 1;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    background: var(--bg3);
+    color: var(--text);
+    font-size: 13px;
+    font-family: monospace;
+  }
+
+  /* P2P Status Messages */
+  #p2pStatus {
+    font-weight: 500;
+  }
+
+  #p2pReceiverStatus p {
+    margin: 0;
+    font-weight: 500;
+  }
+
+  #p2pDeckPreview {
+    border: 1px solid var(--border);
+  }
+
+  #p2pDeckName {
+    color: var(--text);
+    font-size: 16px;
+  }
+
+  #p2pDeckCount {
+    font-size: 14px;
+  }
+
+  /* QR Scanner Styles */
+  #qr-reader {
+    border: 2px solid var(--border);
+  }
+
+  #qr-reader video {
+    border-radius: 12px;
+  }
+
+  #qr-reader__dashboard_section_csr button {
+    background: var(--accent) !important;
+    color: white !important;
+    border: none !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+    font-weight: 500 !important;
+  }
+
+  #qr-reader__dashboard_section_csr button:hover {
+    background: var(--accent2) !important;
+  }
+
+  #qr-reader__dashboard_section_fsr button {
+    background: var(--bg3) !important;
+    color: var(--text) !important;
+    border: 1px solid var(--border) !important;
+    padding: 10px 20px !important;
+    border-radius: 8px !important;
+    cursor: pointer !important;
+  }
+
+  #qr-reader__scan_region {
+    min-height: 300px;
+  }
+
+  #qr-reader__dashboard {
+    padding: 20px !important;
+  }
+
+  /* Mobile Responsive */
+  @media (max-width: 640px) {
+    .deck-grid { grid-template-columns: 1fr; }
+    .study-card-text { font-size: 18px; }
+    .study-card-face { padding: 24px 20px; }
+    .page-title { font-size: 24px; }
+    main { padding: 16px 12px; }
+    .form-row { flex-direction: column; }
+    
+    /* Cards container - smaller on mobile */
+    .cards-container { max-height: 400px; }
+    
+    /* Header buttons - smaller on mobile */
+    .icon-btn, .theme-btn {
+      min-width: 35px;
+      min-height: 35px;
+      padding: 6px;
+    }
+    
+    .icon-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    /* Filter bar - wrap properly */
+    .filter-bar {
+      gap: 6px;
+    }
+    
+    .filter-btn {
+      padding: 8px 12px;
+      font-size: 13px;
+      min-height: 36px;
+    }
+    
+    /* Tag dropdown - full width on mobile */
+    .tag-dropdown-container {
+      max-width: 100%;
+    }
+    
+    .tag-dropdown-menu {
+      max-height: 250px;
+    }
+    
+    /* Modals - full width on mobile */
+    .modal-content {
+      width: 95%;
+      max-width: 100%;
+      margin: 10px;
+    }
+    
+    .modal-body {
+      padding: 16px;
+    }
+    
+    .modal-header {
+      padding: 16px;
+    }
+    
+    .modal-footer {
+      padding: 16px;
+      flex-direction: column;
+    }
+    
+    .modal-footer .btn {
+      width: 100%;
+    }
+    
+    /* Study controls - keep side by side on mobile */
+    .study-controls {
+      flex-direction: row;
+    }
+    
+    .study-controls .btn {
+      flex: 1;
+    }
+    
+    /* Bulk actions - wrap */
+    .bulk-actions-bar {
+      flex-wrap: wrap;
+    }
+    
+    .bulk-btn {
+      flex: 1 1 auto;
+      min-width: 120px;
+    }
+    
+    /* Stats row - wrap */
+    .stats-row {
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    /* Flashcard items - better mobile layout */
+    .flashcard-item {
+      padding: 12px;
+    }
+    
+    .flashcard-content {
+      font-size: 14px;
+    }
+    
+    /* Deck cards - better mobile layout */
+    .deck-card {
+      padding: 16px;
+    }
+    
+    /* Study card - fit mobile */
+    .study-card-container {
+      min-height: 250px;
+    }
+    
+    /* Buttons - better touch targets */
+    .btn {
+      min-height: 44px;
+      padding: 12px 20px;
+    }
+    
+    .select-btn {
+      min-height: 36px;
+      padding: 8px 12px;
+    }
+    
+    /* P2P QR code - smaller on mobile */
+    .qr-container {
+      padding: 12px;
+    }
+    
+    #qrcode img, #qrcode canvas {
+      max-width: 200px !important;
+      max-height: 200px !important;
+    }
+    
+    /* Delete tag bar - stack on mobile */
+    #deleteTagBar {
+      flex-direction: column;
+      gap: 8px;
+      align-items: flex-start !important;
+    }
+  }
+  
+  /* Extra small screens */
+  @media (max-width: 360px) {
+    .page-title { font-size: 20px; }
+    .study-card-text { font-size: 16px; }
+    .filter-btn { padding: 6px 10px; font-size: 12px; }
+  }
+
+  /* iOS fix - prevent zoom on input focus */
+  @media screen and (max-width: 768px) {
+    input[type="text"], textarea, select { font-size: 16px; }
+  }
+  
+  /* Touch device optimizations */
+  @media (hover: none) and (pointer: coarse) {
+    /* Increase touch targets on touch devices */
+    .flashcard-delete,
+    .flashcard-edit,
+    .flashcard-copy {
+      min-width: 44px;
+      min-height: 44px;
+      padding: 12px;
+    }
+    
+    .tag-remove {
+      min-width: 32px;
+      min-height: 32px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .deck-delete {
+      opacity: 1 !important;
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-left">
+    <button class="back-btn" id="backBtn" style="display:none" onclick="goBack()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <h1>Flashcard Maker</h1>
+  </div>
+  <div class="header-right">
+    <button class="icon-btn" id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="scanBtn" onclick="showScanner()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
+      </svg>
+    </button>
+    <button class="icon-btn" id="shareBtn" onclick="showShareModal()">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.368 2.684 3 3 0 00-5.368-2.684z"/>
+      </svg>
+    </button>
+    <button class="theme-btn" id="themeBtn" onclick="toggleTheme()">
+      <svg id="moonIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
+      </svg>
+      <svg id="sunIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="display:none">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"/>
+      </svg>
+    </button>
+  </div>
+</header>
+
+<main>
+  <!-- DECKS VIEW -->
+  <div class="view active" id="decksView">
+    <h2 class="page-title">Your Decks</h2>
+    <p class="page-subtitle">Create flashcard decks to organize and study your material</p>
+
+    <form class="form-row" onsubmit="createDeck(event)">
+      <input type="text" id="newDeckName" placeholder="Enter deck name..." autocomplete="off">
+      <button type="submit" class="btn btn-primary">Create Deck</button>
+    </form>
+
+    <div id="decksList"></div>
+  </div>
+
+  <!-- CARDS VIEW -->
+  <div class="view" id="cardsView">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; gap: 12px;">
+      <div>
+        <h2 class="page-title" id="cardsDeckName"></h2>
+        <p class="page-subtitle" id="cardsDeckCount" style="margin-bottom:0;"></p>
+      </div>
+      <div style="display: flex; gap: 8px; margin-top:8px;">
+        <button class="icon-btn" onclick="copyDeck()" title="Copy deck">
+          <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:18px; height:18px;">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-label">Add New Card</div>
+      
+      <!-- Tag Tabs -->
+      <div class="tag-tabs-container">
+        <div class="tag-tabs-wrapper">
+          <div class="tag-tabs" id="tagTabs"></div>
+        </div>
+        <button class="tag-add-btn" id="tagAddBtn" onclick="showNewTagInput()" style="opacity:0.6;">+</button>
+      </div>
+      <div class="new-tag-input" id="newTagInput" style="display:none">
+        <input type="text" id="newTagText" placeholder="Enter tag name..." autocomplete="off">
+        <button class="select-btn" onclick="addNewTag()">Add</button>
+        <button class="select-btn" onclick="hideNewTagInput()">Cancel</button>
+      </div>
+      
+      <form class="form-stack" onsubmit="addCard(event)">
+        <input type="text" id="cardFront" placeholder="Front (question or term)..." autocomplete="off">
+        <input type="text" id="cardBack" placeholder="Back (answer or definition)..." autocomplete="off">
+        <button type="submit" class="btn btn-primary btn-full">Add Card</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <div style="display:flex; justify-content:space-between; align-items:center; cursor:pointer;" onclick="toggleBulkImport()">
+        <div class="card-label" style="margin:0;">Bulk Import</div>
+        <svg id="bulkImportToggleIcon" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:20px; height:20px; color:var(--text3); transition:transform 0.3s;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+        </svg>
+      </div>
+      <div id="bulkImportContent" style="display:none; margin-top:12px;">
+        <p style="font-size:14px; color:var(--text2); margin-bottom:12px;">
+          Paste multiple cards using (question) [answer] format. Add optional tags with {tag1, tag2}
+        </p>
+        <textarea 
+          id="bulkImportText" 
+          placeholder="(What is the capital of France?) [Paris] {geography, europe}
+(Who painted the Mona Lisa?) [Leonardo da Vinci] {art, history}
+(What is the chemical symbol for gold?) [Au] {chemistry, science}
+(How many planets are in our solar system?) [8] {astronomy}
+(What is photosynthesis?) [The process by which plants convert sunlight into food] {biology, science}"
+          style="width:100%; min-height:120px; padding:12px 16px; border:1px solid var(--border); border-radius:8px; font-size:14px; background:var(--bg2); color:var(--text); outline:none; resize:vertical; font-family:inherit; transition:all 0.2s;"
+          onfocus="this.style.borderColor='var(--accent)'; this.style.boxShadow='0 0 0 3px rgba(66, 153, 225, 0.1)';"
+          onblur="this.style.borderColor='var(--border)'; this.style.boxShadow='none';"
+        ></textarea>
+        <button class="btn btn-primary btn-full" style="margin-top:12px;" onclick="bulkImport()">Import Cards</button>
+        <div id="bulkImportResult" style="margin-top:12px; font-size:14px; display:none;"></div>
+      </div>
+    </div>
+
+    <div id="filterBar" style="display:none">
+      <div class="section-label">Filters</div>
+      <div class="filter-bar">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all')">All</button>
+        <button class="filter-btn" data-filter="learned" onclick="setFilter('learned')">Learned</button>
+        <button class="filter-btn" data-filter="not-learned" onclick="setFilter('not-learned')">Not Learned</button>
+        <button class="select-btn" id="selectModeBtn" onclick="toggleSelectionMode()">Select</button>
+      </div>
+      
+      <!-- Tag Filter Section -->
+      <div style="margin-top:12px;">
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="tag-dropdown-container" style="flex:1;">
+            <button class="tag-dropdown-btn" onclick="toggleTagDropdown()">
+              <span id="tagDropdownLabel">Select Tags</span>
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+              </svg>
+            </button>
+            <div id="tagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+              <div id="tagFilterContainer"></div>
+            </div>
+          </div>
+          <button id="clearTagsBtn" class="clear-tags-btn" onclick="clearTagFilters()" style="display:none;">Clear</button>
+        </div>
+      </div>
+      
+      <div id="deleteTagBar" style="display:none; margin-top:8px; padding:8px 12px; background:var(--bg3); border-radius:6px; align-items:center; justify-content:space-between;">
+        <span style="font-size:13px; color:var(--text2);">Filtering by tags: <strong id="currentFilterTagName"></strong></span>
+        <button class="select-btn" onclick="deleteAllWithTags()" style="color:var(--danger); border-color:var(--danger); font-size:12px; padding:4px 10px;">Delete All</button>
+      </div>
+      <div class="stats-row" id="statsRow"></div>
+    </div>
+
+    <div id="bulkActionsBar" class="bulk-actions-bar" style="display:none">
+      <span class="count" id="selectedCount">0 selected</span>
+      <button class="bulk-btn" onclick="bulkAddTag()">Add Tag</button>
+      <button class="bulk-btn" onclick="bulkRemoveTag()">Remove Tag</button>
+      <button class="bulk-btn danger" onclick="bulkDelete()">Delete Selected</button>
+      <button class="bulk-btn" onclick="exitSelectionMode()">Cancel</button>
+    </div>
+
+    <div id="selectAllBar" class="bulk-select-all" style="display:none">
+      <label>
+        <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this.checked)">
+        <span>Select all visible cards</span>
+      </label>
+    </div>
+
+    <div class="cards-container">
+      <div id="cardsList"></div>
+    </div>
+
+    <div id="studySection" style="display:none">
+      <button class="btn btn-success btn-full" style="padding:14px; font-size:15px; margin-top:12px;" onclick="startStudy()">
+        Start Studying
+      </button>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button class="btn btn-ghost" style="flex:1; padding:10px; font-size:13px;" onclick="startP2PShare()">
+          Share (P2P)
+        </button>
+        <button class="btn btn-ghost" style="flex:1; padding:10px; font-size:13px; color:var(--text3);" onclick="resetProgress()">
+          Reset
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- STUDY VIEW -->
+  <div class="view" id="studyView">
+    <h2 class="page-title" id="studyDeckName"></h2>
+    
+    <!-- Study Filters -->
+    <div class="filter-bar" style="margin-bottom:12px;">
+      <button class="filter-btn active" data-study-filter="all" onclick="setStudyFilter('all')">All</button>
+      <button class="filter-btn" data-study-filter="learned" onclick="setStudyFilter('learned')">Learned</button>
+      <button class="filter-btn" data-study-filter="not-learned" onclick="setStudyFilter('not-learned')">Not Learned</button>
+      <button class="filter-btn" onclick="copyStudyCard()" title="Copy card" style="padding:6px 10px; opacity:0.6;">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:14px; height:14px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+        </svg>
+      </button>
+      <button class="filter-btn" onclick="editStudyCard()" title="Edit card" style="padding:6px 10px; opacity:0.6;">
+        <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:14px; height:14px;">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+        </svg>
+      </button>
+    </div>
+    
+    <!-- Study Tag Filter Section -->
+    <div style="margin-bottom:20px;">
+      <div style="display:flex; gap:8px; align-items:center;">
+        <div class="tag-dropdown-container" style="flex:1;">
+          <button class="tag-dropdown-btn" onclick="toggleStudyTagDropdown()">
+            <span id="studyTagDropdownLabel">Select Tags</span>
+            <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" style="width:16px; height:16px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </button>
+          <div id="studyTagDropdownMenu" class="tag-dropdown-menu" style="display:none;">
+            <div id="studyTagFilterContainer"></div>
+          </div>
+        </div>
+        <button id="studyClearTagsBtn" class="clear-tags-btn" onclick="clearStudyTagFilters()" style="display:none;">Clear</button>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-bar">
+        <div class="progress-fill" id="progressFill"></div>
+      </div>
+      <span class="progress-text" id="progressText"></span>
+    </div>
+
+    <div id="studyCardArea">
+      <div class="study-card-container" onclick="flipCard()">
+        <div class="study-card-inner" id="studyCardInner">
+          <div class="study-card-face study-card-front">
+            <div class="study-card-text" id="studyFront"></div>
+          </div>
+          <div class="study-card-face study-card-back">
+            <div class="study-card-text" id="studyBack"></div>
+          </div>
+        </div>
+      </div>
+
+      <p class="study-hint" id="studyHint">Click the card to reveal the answer</p>
+
+      <div class="study-controls" id="studyRating" style="display:none">
+        <button class="btn btn-danger" onclick="rateCard(false)">Still Learning</button>
+        <button class="btn btn-success" onclick="rateCard(true)">Got It</button>
+      </div>
+
+      <div class="study-controls">
+        <button class="btn btn-ghost" id="prevBtn" onclick="prevCard()">Previous</button>
+        <button class="btn btn-ghost" id="nextBtn" onclick="nextCard()">Next</button>
+      </div>
+
+      <button class="btn btn-ghost btn-full" style="margin-top:12px; padding:10px; font-size:13px; color:var(--text3);" onclick="tryAgain()">
+        Try Again
+      </button>
+    </div>
+
+    <div id="studyResult" style="display:none">
+      <div class="study-result">
+        <div class="study-result-title">Session Complete</div>
+        <div class="study-result-text" id="resultText"></div>
+        <button class="btn btn-primary" onclick="restartStudy()">Study Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Card Modal -->
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>Edit Card</h3>
+        <button class="modal-close" onclick="closeEditModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <textarea id="editFront" placeholder="Front (question or term)..." rows="3"></textarea>
+        <textarea id="editBack" placeholder="Back (answer or definition)..." rows="3"></textarea>
+        <div class="edit-tags-section">
+          <label>Tags:</label>
+          <div class="edit-tag-tabs-container">
+            <div class="tag-tabs-wrapper">
+              <div class="tag-tabs" id="editTagTabs"></div>
+            </div>
+            <button class="tag-add-btn" onclick="showNewEditTagInput()" style="opacity:0.6;">+</button>
+          </div>
+          <div class="new-tag-input" id="newEditTagInput" style="display:none">
+            <input type="text" id="newEditTagText" placeholder="Enter tag name...">
+            <button class="select-btn" onclick="addNewEditTag()">Add</button>
+            <button class="select-btn" onclick="hideNewEditTagInput()">Cancel</button>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" onclick="closeEditModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="saveEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div id="confirmModal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 id="confirmTitle">Confirm</h3>
+      </div>
+      <div class="modal-body">
+        <p id="confirmMessage" style="color:var(--text2); font-size:14px; line-height:1.6;"></p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="confirmCancelBtn">Cancel</button>
+        <button class="btn btn-danger" id="confirmOkBtn">Delete</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Share Modal -->
+  <div id="shareModal" class="modal">
+    <div class="modal-content" style="max-width:450px;">
+      <div class="modal-header">
+        <h3>Share Flashcard Maker</h3>
+        <button class="modal-close" onclick="closeShareModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--text2); font-size:14px; margin-bottom:20px;">
+          Scan this QR code or copy the link to download the app
+        </p>
+        <div class="qr-container">
+          <div id="qrcode"></div>
+        </div>
+        <div class="share-link-box">
+          <input type="text" id="shareLink" readonly>
+          <button class="btn btn-primary" onclick="copyShareLink()">Copy</button>
+        </div>
+        <p id="copyFeedback" style="color:var(--success); font-size:13px; margin-top:8px; display:none;">Link copied!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- P2P Share Modal -->
+  <div id="p2pShareModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3 id="p2pModalTitle">Share Deck via P2P</h3>
+        <button class="modal-close" onclick="closeP2PShareModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="p2pSenderView">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Share this QR code or copy the code below. The receiver scans or pastes it to get the deck directly via peer-to-peer.
+          </p>
+          <div class="qr-container">
+            <div id="p2pQrCode"></div>
+          </div>
+          <div class="share-link-box">
+            <input type="text" id="p2pShareLink" readonly>
+            <button class="btn btn-primary" onclick="copyP2PLink()">Copy</button>
+          </div>
+          <p id="p2pStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
+            Waiting for connection...
+          </p>
+          <p id="p2pCopyFeedback" style="color:var(--success); font-size:13px; margin-top:8px; display:none; text-align:center;">Link copied!</p>
+        </div>
+        <div id="p2pReceiverView" style="display:none;">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            You're receiving a deck via P2P connection.
+          </p>
+          <div id="p2pReceiverStatus" style="text-align:center; padding:20px;">
+            <p style="color:var(--text2); font-size:14px;">Connecting to sender...</p>
+          </div>
+          <div id="p2pReceivedDeck" style="display:none;">
+            <h4 style="margin-bottom:12px;">Received Deck:</h4>
+            <div id="p2pDeckPreview" style="background:var(--bg3); padding:16px; border-radius:8px; margin-bottom:16px;">
+              <p id="p2pDeckName" style="font-weight:600; margin-bottom:8px;"></p>
+              <p id="p2pDeckCount" style="color:var(--text2); font-size:13px;"></p>
+            </div>
+            <button class="btn btn-primary btn-full" onclick="importReceivedDeck()">Import Deck</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Input Modal -->
+  <div id="inputModal" class="modal">
+    <div class="modal-content" style="max-width:400px;">
+      <div class="modal-header">
+        <h3 id="inputModalTitle">Input</h3>
+      </div>
+      <div class="modal-body">
+        <p id="inputModalMessage" style="color:var(--text2); font-size:14px; line-height:1.6; margin-bottom:12px;"></p>
+        <input type="text" id="inputModalField" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg3); color:var(--text); font-size:14px; outline:none; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-ghost" id="inputModalCancelBtn">Cancel</button>
+        <button class="btn btn-primary" id="inputModalOkBtn">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- QR Scanner Modal -->
+  <div id="scannerModal" class="modal">
+    <div class="modal-content" style="max-width:500px;">
+      <div class="modal-header">
+        <h3>Receive Deck</h3>
+        <button class="modal-close" onclick="closeScanner()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="scannerCameraView">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Point your camera at a QR code to receive a deck
+          </p>
+          <div id="qr-reader" style="width:100%; border-radius:12px; overflow:hidden;"></div>
+          <p id="scannerStatus" style="color:var(--text2); font-size:13px; margin-top:12px; text-align:center;">
+            Initializing camera...
+          </p>
+        </div>
+        
+        <div id="scannerManualView" style="display:none;">
+          <p style="color:var(--text2); font-size:14px; margin-bottom:16px;">
+            Enter the connection code or link shared by the sender:
+          </p>
+          <div class="share-link-box">
+            <input type="text" id="manualP2PUrl" placeholder="Paste code or link here...">
+            <button class="btn btn-primary" onclick="connectFromManualInput()">Connect</button>
+          </div>
+          <div style="margin-top:16px; padding:12px; background:var(--bg3); border-radius:8px; border-left:3px solid var(--accent);">
+            <p style="color:var(--text2); font-size:12px; line-height:1.6; margin:0;">
+              <strong>Camera not available?</strong><br>
+              For camera access, serve this app over HTTP. On Android, use Termux:<br>
+              <code style="background:var(--bg2); padding:2px 6px; border-radius:4px; font-size:11px;">python server.py</code><br>
+              Then open <code style="background:var(--bg2); padding:2px 6px; border-radius:4px; font-size:11px;">http://localhost:8000</code>
+            </p>
+          </div>
+          <p style="color:var(--text3); font-size:12px; margin-top:12px; line-height:1.5;">
+            💡 Ask the sender to click "Copy" on their share screen and send you the code.
+          </p>
+        </div>
+        
+        <button class="btn btn-ghost btn-full" style="margin-top:16px;" onclick="toggleScannerView()">
+          <span id="toggleScannerText">Can't scan? Enter link manually</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+<script>
+  // App download URL - UPDATE THIS WITH YOUR ACTUAL REPO (optional)
+  const GITHUB_REPO_URL = 'https://github.com/jjmm3282006-commits/Flash-C/blob/cross-device-web-app-development-7ebac/public/TERMUX_SETUP.md';
+  
+  // Hosted app URL (optional - only needed if you want QR codes to auto-open the app)
+  // Leave empty to share just the peer ID code instead
+  const APP_URL = '';
+  
+  // State
+  let decks = [];
+  let currentDeckId = null;
+  let studyIndex = 0;
+  let studyFlipped = false;
+  let knownCount = 0;
+  let darkMode = false;
+  let currentFilter = 'all';
+  let currentTagFilters = []; // Array of selected tags for filtering
+  let studyCards = []; // Filtered cards for study mode
+  let selectedTags = []; // Tags selected for the current card being added
+  let pendingTags = []; // Tags created but not yet used in any card
+  let studyFilter = 'all'; // Filter for study mode
+  let studyTagFilters = []; // Tag filters for study mode
+  
+  // Bulk selection state
+  let selectionMode = false;
+  let selectedCardIds = new Set();
+  
+  // Undo/Redo stacks
+  let undoStack = [];
+  let redoStack = [];
+  const MAX_UNDO_STACK = 50;
+  
+  function saveState() {
+    undoStack.push(JSON.stringify(decks));
+    if (undoStack.length > MAX_UNDO_STACK) {
+      undoStack.shift();
+    }
+    // Clear redo stack when new action is performed
+    redoStack = [];
+  }
+  
+  function undo() {
+    if (undoStack.length === 0) {
+      showNotification('Nothing to undo', 'info');
+      return;
+    }
+    
+    // Save current state to redo stack
+    redoStack.push(JSON.stringify(decks));
+    
+    const previousState = undoStack.pop();
+    decks = JSON.parse(previousState);
+    save();
+    
+    // Re-render based on current view
+    if (document.getElementById('decksView').classList.contains('active')) {
+      renderDecks();
+    } else if (document.getElementById('cardsView').classList.contains('active')) {
+      renderCards();
+    }
+    
+    showNotification('Undo successful', 'success');
+  }
+  
+  function redo() {
+    if (redoStack.length === 0) {
+      showNotification('Nothing to redo', 'info');
+      return;
+    }
+    
+    // Save current state to undo stack
+    undoStack.push(JSON.stringify(decks));
+    
+    const nextState = redoStack.pop();
+    decks = JSON.parse(nextState);
+    save();
+    
+    // Re-render based on current view
+    if (document.getElementById('decksView').classList.contains('active')) {
+      renderDecks();
+    } else if (document.getElementById('cardsView').classList.contains('active')) {
+      renderCards();
+    }
+    
+    showNotification('Redo successful', 'success');
+  }
+  
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--accent)'};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeIn 0.2s;
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.3s';
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+  }
+  
+  // P2P State
+  let peer = null;
+  let currentConnection = null;
+  let isSharing = false;
+
+  // Init
+  function init() {
+    const saved = localStorage.getItem('flashcard-decks');
+    if (saved) decks = JSON.parse(saved);
+    
+    const savedTheme = localStorage.getItem('flashcard-dark');
+    if (savedTheme) {
+      darkMode = JSON.parse(savedTheme);
+      applyTheme();
+    }
+
+    renderDecks();
+  }
+
+  function save() {
+    localStorage.setItem('flashcard-decks', JSON.stringify(decks));
+  }
+
+  // Theme
+  function toggleTheme() {
+    darkMode = !darkMode;
+    localStorage.setItem('flashcard-dark', JSON.stringify(darkMode));
+    applyTheme();
+  }
+
+  function applyTheme() {
+    document.body.classList.toggle('dark', darkMode);
+    document.getElementById('moonIcon').style.display = darkMode ? 'none' : 'block';
+    document.getElementById('sunIcon').style.display = darkMode ? 'block' : 'none';
+  }
+
+  // Navigation
+  function showView(viewId) {
+    document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+    document.getElementById(viewId).classList.add('active');
+    
+    const backBtn = document.getElementById('backBtn');
+    backBtn.style.display = viewId === 'decksView' ? 'none' : 'flex';
+  }
+
+  function goBack() {
+    const studyView = document.getElementById('studyView');
+    const cardsView = document.getElementById('cardsView');
+    
+    if (studyView.classList.contains('active')) {
+      showView('cardsView');
+      renderCards();
+    } else if (cardsView.classList.contains('active')) {
+      // Reset undo/redo stacks when exiting deck
+      undoStack = [];
+      redoStack = [];
+      showView('decksView');
+      currentDeckId = null;
+      renderDecks();
+    }
+  }
+
+  // Decks
+  function createDeck(e) {
+    e.preventDefault();
+    const input = document.getElementById('newDeckName');
+    const name = input.value.trim();
+    if (!name) return;
+
+    saveState();
+    decks.push({
+      id: Date.now().toString(),
+      name: name,
+      cards: []
+    });
+    save();
+    input.value = '';
+    renderDecks();
+  }
+
+  async function deleteDeck(id) {
+    const confirmed = await showConfirm(
+      'Delete Deck',
+      'Are you sure you want to delete this deck and all its cards? This action cannot be undone.',
+      'Delete Deck'
+    );
+    if (!confirmed) return;
+    saveState();
+    decks = decks.filter(d => d.id !== id);
+    save();
+    renderDecks();
+  }
+
+  async function renameDeck(id) {
+    const deck = decks.find(d => d.id === id);
+    if (!deck) return;
+
+    const newName = await showInput(
+      'Rename Deck',
+      'Enter a new name for this deck:',
+      deck.name
+    );
+
+    if (!newName || !newName.trim()) return;
+
+    saveState();
+    deck.name = newName.trim();
+    save();
+    renderDecks();
+  }
+
+  function openDeck(id) {
+    currentDeckId = id;
+    currentFilter = 'all';
+    currentTagFilters = [];
+    selectedTags = [];
+    pendingTags = [];
+    selectionMode = false;
+    selectedCardIds.clear();
+    renderCards();
+    showView('cardsView');
+  }
+
+  function renderDecks() {
+    const container = document.getElementById('decksList');
+    
+    if (decks.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-text">No decks yet. Create your first one above.</div>
+        </div>`;
+      return;
+    }
+
+    container.innerHTML = '<div class="deck-grid">' + decks.map(deck => `
+      <div class="deck-card">
+        <div class="deck-info" data-deck-id="${deck.id}" style="cursor:pointer;">
+          <div class="deck-name">${escapeHtml(deck.name)}</div>
+          <div class="deck-count">${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}</div>
+        </div>
+        <div style="display:flex; gap:8px; margin-top:12px;">
+          <button class="btn btn-ghost deck-edit-btn" data-deck-id="${deck.id}" style="flex:1; padding:8px; font-size:13px;">Rename</button>
+          <button class="btn btn-ghost deck-delete-btn" data-deck-id="${deck.id}" style="flex:1; padding:8px; font-size:13px; color:var(--danger);">Delete</button>
+        </div>
+      </div>
+    `).join('') + '</div>';
+
+    // Attach event listeners
+    document.querySelectorAll('.deck-info').forEach(el => {
+      el.addEventListener('click', function() {
+        openDeck(this.dataset.deckId);
+      });
+    });
+
+    document.querySelectorAll('.deck-delete-btn').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        deleteDeck(this.dataset.deckId);
+      });
+    });
+
+    document.querySelectorAll('.deck-edit-btn').forEach(el => {
+      el.addEventListener('click', function(e) {
+        e.stopPropagation();
+        renameDeck(this.dataset.deckId);
+      });
+    });
+  }
+
+  // Cards
+  function getCurrentDeck() {
+    return decks.find(d => d.id === currentDeckId);
+  }
+
+  function addCard(e) {
+    e.preventDefault();
+    const front = document.getElementById('cardFront').value.trim();
+    const back = document.getElementById('cardBack').value.trim();
+    if (!front || !back) return;
+
+    saveState();
+    const deck = getCurrentDeck();
+    deck.cards.push({
+      id: Date.now().toString(),
+      front: front,
+      back: back,
+      tags: [...selectedTags],
+      learned: false
+    });
+    save();
+    document.getElementById('cardFront').value = '';
+    document.getElementById('cardBack').value = '';
+    document.getElementById('cardFront').focus();
+    // Keep selected tags for next card
+    renderCards();
+  }
+
+  // Tag Tabs Functions
+  function getAllTags() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    const tags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => tags.add(tag));
+      }
+    });
+    // Include pending tags
+    pendingTags.forEach(tag => tags.add(tag));
+    return Array.from(tags).sort();
+  }
+
+  function renderTagTabs() {
+    const allTags = getAllTags();
+    const tagTabs = document.getElementById('tagTabs');
+    
+    if (allTags.length === 0) {
+      tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
+    } else {
+      tagTabs.innerHTML = allTags.map(tag => {
+        const isSelected = selectedTags.includes(tag);
+        return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleTag('${escapeHtml(tag)}')">${escapeHtml(tag)}<span class="tag-remove" onclick="event.stopPropagation(); removeTag('${escapeHtml(tag)}')">&times;</span></div>`;
+      }).join('');
+    }
+    
+    // Trigger scroll check after rendering
+    setTimeout(() => {
+      const wrapper = tagTabs.parentElement;
+      if (tagTabs.scrollWidth > tagTabs.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }, 50);
+  }
+
+  async function removeTag(tag) {
+    const confirmed = await showConfirm(
+      'Delete Tag',
+      `Are you sure you want to delete the tag "${tag}" from all cards? This action cannot be undone.`,
+      'Delete Tag'
+    );
+    if (!confirmed) return;
+    
+    // Remove from pending tags
+    const pendingIndex = pendingTags.indexOf(tag);
+    if (pendingIndex !== -1) {
+      pendingTags.splice(pendingIndex, 1);
+    }
+    
+    // Remove from selected tags
+    const selectedIndex = selectedTags.indexOf(tag);
+    if (selectedIndex !== -1) {
+      selectedTags.splice(selectedIndex, 1);
+    }
+    
+    // Remove from all cards
+    const deck = getCurrentDeck();
+    if (deck) {
+      deck.cards.forEach(card => {
+        if (card.tags) {
+          const tagIndex = card.tags.indexOf(tag);
+          if (tagIndex !== -1) {
+            card.tags.splice(tagIndex, 1);
+          }
+        }
+      });
+      save();
+    }
+    
+    renderTagTabs();
+    renderCards();
+  }
+
+  function toggleTag(tag) {
+    const index = selectedTags.indexOf(tag);
+    if (index === -1) {
+      selectedTags.push(tag);
+    } else {
+      selectedTags.splice(index, 1);
+    }
+    renderTagTabs();
+  }
+
+  function showNewTagInput() {
+    document.getElementById('newTagInput').style.display = 'flex';
+    document.getElementById('newTagText').focus();
+  }
+
+  function hideNewTagInput() {
+    document.getElementById('newTagInput').style.display = 'none';
+    document.getElementById('newTagText').value = '';
+  }
+
+  function addNewTag() {
+    const input = document.getElementById('newTagText');
+    const tagName = input.value.trim();
+    
+    if (!tagName) return;
+    
+    // Check if tag already exists
+    const allTags = getAllTags();
+    if (!allTags.includes(tagName)) {
+      // New tag - add to pending tags
+      pendingTags.push(tagName);
+    }
+    
+    // Select the tag
+    if (!selectedTags.includes(tagName)) {
+      selectedTags.push(tagName);
+    }
+    
+    hideNewTagInput();
+    renderTagTabs();
+  }
+
+  // Edit Card Functions
+  let editingCardId = null;
+  let editSelectedTags = [];
+
+  function editCard(cardId) {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const card = deck.cards.find(c => c.id === cardId);
+    if (!card) return;
+    
+    editingCardId = cardId;
+    editSelectedTags = card.tags ? [...card.tags] : [];
+    
+    // Fill in the form
+    document.getElementById('editFront').value = card.front;
+    document.getElementById('editBack').value = card.back;
+    
+    // Render edit tag tabs
+    renderEditTagTabs();
+    
+    // Show modal
+    const modal = document.getElementById('editModal');
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeEditModal();
+      }
+    };
+  }
+
+  function closeEditModal() {
+    const modal = document.getElementById('editModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    document.getElementById('newEditTagInput').style.display = 'none';
+    editingCardId = null;
+    editSelectedTags = [];
+  }
+
+  function renderEditTagTabs() {
+    const allTags = getAllTags();
+    const tagTabs = document.getElementById('editTagTabs');
+    
+    if (allTags.length === 0) {
+      tagTabs.innerHTML = '<span style="font-size:13px; color:var(--text3); padding:8px;">No tags yet. Click + to create one.</span>';
+    } else {
+      tagTabs.innerHTML = allTags.map(tag => {
+        const isSelected = editSelectedTags.includes(tag);
+        return `<div class="tag-tab ${isSelected ? 'selected' : ''}" onclick="toggleEditTag('${escapeHtml(tag)}')">${escapeHtml(tag)}</div>`;
+      }).join('');
+    }
+    
+    // Trigger scroll check after rendering
+    setTimeout(() => {
+      const wrapper = tagTabs.parentElement;
+      if (tagTabs.scrollWidth > tagTabs.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }, 50);
+  }
+
+  function toggleEditTag(tag) {
+    const index = editSelectedTags.indexOf(tag);
+    if (index === -1) {
+      editSelectedTags.push(tag);
+    } else {
+      editSelectedTags.splice(index, 1);
+    }
+    renderEditTagTabs();
+  }
+
+  function showNewEditTagInput() {
+    document.getElementById('newEditTagInput').style.display = 'flex';
+    document.getElementById('newEditTagText').focus();
+  }
+
+  function hideNewEditTagInput() {
+    document.getElementById('newEditTagInput').style.display = 'none';
+    document.getElementById('newEditTagText').value = '';
+  }
+
+  function addNewEditTag() {
+    const input = document.getElementById('newEditTagText');
+    const tagName = input.value.trim();
+    
+    if (!tagName) return;
+    
+    // Check if tag already exists
+    const allTags = getAllTags();
+    if (!allTags.includes(tagName)) {
+      // New tag - add to pending tags
+      pendingTags.push(tagName);
+    }
+    
+    // Select the tag
+    if (!editSelectedTags.includes(tagName)) {
+      editSelectedTags.push(tagName);
+    }
+    
+    hideNewEditTagInput();
+    renderEditTagTabs();
+  }
+
+  function saveEdit() {
+    const deck = getCurrentDeck();
+    if (!deck || !editingCardId) return;
+    
+    const card = deck.cards.find(c => c.id === editingCardId);
+    if (!card) return;
+    
+    const front = document.getElementById('editFront').value.trim();
+    const back = document.getElementById('editBack').value.trim();
+    
+    if (!front || !back) {
+      alert('Front and back cannot be empty');
+      return;
+    }
+    
+    saveState();
+    card.front = front;
+    card.back = back;
+    card.tags = [...editSelectedTags];
+    
+    save();
+    closeEditModal();
+    renderCards();
+  }
+
+  async function deleteCard(cardId) {
+    const confirmed = await showConfirm(
+      'Delete Card',
+      'Are you sure you want to delete this card? This action cannot be undone.',
+      'Delete Card'
+    );
+    if (!confirmed) return;
+    saveState();
+    const deck = getCurrentDeck();
+    deck.cards = deck.cards.filter(c => c.id !== cardId);
+    save();
+    renderCards();
+  }
+
+  function copyCard(cardId) {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const card = deck.cards.find(c => c.id === cardId);
+    if (!card) return;
+    
+    const text = formatCardForCopy(card);
+    copyToClipboard(text);
+  }
+
+  function copyAllCards() {
+    const filteredCards = getFilteredCards();
+    if (filteredCards.length === 0) {
+      alert('No cards to copy.');
+      return;
+    }
+    
+    const text = filteredCards.map(formatCardForCopy).join('\n');
+    copyToClipboard(text);
+  }
+
+  function copyDeck() {
+    const deck = getCurrentDeck();
+    if (!deck || deck.cards.length === 0) {
+      alert('No cards in this deck.');
+      return;
+    }
+    
+    const text = deck.cards.map(formatCardForCopy).join('\n');
+    copyToClipboard(text);
+  }
+
+  function formatCardForCopy(card) {
+    let result = `(${card.front}) [${card.back}]`;
+    if (card.tags && card.tags.length > 0) {
+      result += ` {${card.tags.join(', ')}}`;
+    }
+    return result;
+  }
+
+  function copyToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      navigator.clipboard.writeText(text).then(() => {
+        showCopyFeedback();
+      }).catch(err => {
+        fallbackCopy(text);
+      });
+    } else {
+      fallbackCopy(text);
+    }
+  }
+
+  function fallbackCopy(text) {
+    const textarea = document.createElement('textarea');
+    textarea.value = text;
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    try {
+      document.execCommand('copy');
+      showCopyFeedback();
+    } catch (err) {
+      alert('Failed to copy. Please try again.');
+    }
+    document.body.removeChild(textarea);
+  }
+
+  function showCopyFeedback() {
+    const feedback = document.createElement('div');
+    feedback.textContent = 'Copied to clipboard';
+    feedback.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--bg2);
+      color: var(--text);
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      border: 1px solid var(--border);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+      animation: fadeIn 0.2s;
+    `;
+    document.body.appendChild(feedback);
+    
+    setTimeout(() => {
+      feedback.style.opacity = '0';
+      feedback.style.transition = 'opacity 0.3s';
+      setTimeout(() => feedback.remove(), 300);
+    }, 1500);
+  }
+
+  function toggleBulkImport() {
+    const content = document.getElementById('bulkImportContent');
+    const icon = document.getElementById('bulkImportToggleIcon');
+    
+    if (content.style.display === 'none') {
+      content.style.display = 'block';
+      icon.style.transform = 'rotate(180deg)';
+    } else {
+      content.style.display = 'none';
+      icon.style.transform = 'rotate(0deg)';
+    }
+  }
+
+  function bulkImport() {
+    const text = document.getElementById('bulkImportText').value.trim();
+    const resultDiv = document.getElementById('bulkImportResult');
+    
+    if (!text) {
+      resultDiv.style.display = 'block';
+      resultDiv.style.color = 'var(--danger)';
+      resultDiv.textContent = 'Please paste some text to import.';
+      return;
+    }
+
+    // Parse (question) [answer] {optional tags} pairs
+    const regex = /\(([^)]+)\)\s*\[([^\]]+)\](?:\s*\{([^}]*)\})?/g;
+    const matches = [];
+    let match;
+    
+    while ((match = regex.exec(text)) !== null) {
+      const front = match[1].trim();
+      const back = match[2].trim();
+      const tagsStr = match[3] ? match[3].trim() : '';
+      const tags = tagsStr ? tagsStr.split(',').map(t => t.trim()).filter(t => t) : [];
+      if (front && back) {
+        matches.push({ front, back, tags });
+      }
+    }
+
+    if (matches.length === 0) {
+      resultDiv.style.display = 'block';
+      resultDiv.style.color = 'var(--danger)';
+      resultDiv.textContent = 'No valid cards found. Use format: (question) [answer] or (question) [answer] {tag1, tag2}';
+      return;
+    }
+
+    // Add cards to current deck
+    const deck = getCurrentDeck();
+    matches.forEach(card => {
+      deck.cards.push({
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        front: card.front,
+        back: card.back,
+        tags: card.tags,
+        learned: false
+      });
+    });
+    
+    save();
+    
+    // Clear input and show success
+    document.getElementById('bulkImportText').value = '';
+    resultDiv.style.display = 'block';
+    resultDiv.style.color = 'var(--success)';
+    resultDiv.textContent = `Successfully imported ${matches.length} card${matches.length !== 1 ? 's' : ''}.`;
+    
+    // Re-render cards list
+    renderCards();
+    
+    // Hide result after 3 seconds
+    setTimeout(() => {
+      resultDiv.style.display = 'none';
+    }, 3000);
+  }
+
+  function renderCards() {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+
+    document.getElementById('cardsDeckName').textContent = deck.name;
+    document.getElementById('cardsDeckCount').textContent = 
+      `${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''} in this deck`;
+
+    // Render tag tabs
+    renderTagTabs();
+
+    const container = document.getElementById('cardsList');
+    const studySection = document.getElementById('studySection');
+    const filterBar = document.getElementById('filterBar');
+
+    if (deck.cards.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-text">No cards yet. Add your first card above.</div>
+        </div>`;
+      studySection.style.display = 'none';
+      filterBar.style.display = 'none';
+      return;
+    }
+
+    // Show filter bar
+    filterBar.style.display = 'block';
+
+    // Render tag filter UI
+    renderTagFilterUI();
+
+    // Filter cards
+    let filteredCards = deck.cards;
+    if (currentFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (currentFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    if (currentTagFilters.length > 0) {
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return currentTagFilters.some(tag => cardTags.includes(tag));
+      });
+    }
+
+    // Update stats
+    const learnedCount = deck.cards.filter(c => c.learned).length;
+    const notLearnedCount = deck.cards.length - learnedCount;
+    document.getElementById('statsRow').innerHTML = `
+      <div class="stat-item">
+        <div class="stat-dot learned"></div>
+        <span>${learnedCount} learned</span>
+      </div>
+      <div class="stat-item">
+        <div class="stat-dot not-learned"></div>
+        <span>${notLearnedCount} not learned</span>
+      </div>
+    `;
+
+    // Update filter buttons
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.filter === currentFilter);
+    });
+
+    if (filteredCards.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-text">No cards match the current filters.</div>
+        </div>`;
+    } else {
+      container.innerHTML = '<div class="section-label">Cards (' + filteredCards.length + ')</div>' + filteredCards.map(card => {
+        const isSelected = selectedCardIds.has(card.id);
+        const checkboxHtml = selectionMode ? `<input type="checkbox" class="card-checkbox" ${isSelected ? 'checked' : ''} onchange="toggleCardSelection('${card.id}')">` : '';
+        
+        return `
+        <div class="flashcard-item" ${selectionMode ? 'style="cursor:pointer;"' : ''}>
+          ${selectionMode ? checkboxHtml : `<div class="${card.learned ? 'learned-indicator' : 'not-learned-indicator'}"></div>`}
+          <div class="flashcard-content" ${selectionMode ? `onclick="toggleCardSelection('${card.id}')"` : ''}>
+            <div class="flashcard-front">${escapeHtml(card.front)}</div>
+            <div class="flashcard-back">${escapeHtml(card.back)}</div>
+            ${(card.tags && card.tags.length > 0) ? '<div>' + card.tags.map(t => '<span class="tag-pill">' + escapeHtml(t) + '</span>').join('') + '</div>' : ''}
+          </div>
+          ${!selectionMode ? `
+          <div style="display:flex; gap:8px; flex-shrink:0;">
+            <button class="flashcard-copy" onclick="copyCard('${card.id}')" title="Copy card">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/>
+              </svg>
+            </button>
+            <button class="flashcard-edit" onclick="editCard('${card.id}')" title="Edit card">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+              </svg>
+            </button>
+            <button class="flashcard-delete" onclick="deleteCard('${card.id}')" ontouchend="event.preventDefault(); deleteCard('${card.id}')" title="Delete card" style="touch-action:manipulation;">
+              <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+              </svg>
+            </button>
+          </div>
+          ` : ''}
+        </div>
+      `;
+      }).join('');
+    }
+
+    // Update study button
+    const cardsToStudy = getFilteredCards().length;
+    studySection.style.display = 'block';
+    studySection.querySelector('button').textContent = 
+      cardsToStudy > 0 ? `Start Studying (${cardsToStudy} card${cardsToStudy !== 1 ? 's' : ''})` : 'No cards to study';
+    studySection.querySelector('button').disabled = cardsToStudy === 0;
+  }
+
+  function getFilteredCards() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    
+    let filteredCards = deck.cards;
+    if (currentFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (currentFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    if (currentTagFilters.length > 0) {
+      // Filter cards that have ANY of the selected tags (OR logic)
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return currentTagFilters.some(tag => cardTags.includes(tag));
+      });
+    }
+    return filteredCards;
+  }
+
+  function setFilter(filter) {
+    currentFilter = filter;
+    renderCards();
+  }
+
+  function setTagFilter(tag) {
+    // Toggle tag in the filter array
+    const index = currentTagFilters.indexOf(tag);
+    if (index === -1) {
+      currentTagFilters.push(tag);
+    } else {
+      currentTagFilters.splice(index, 1);
+    }
+    
+    // Show/hide delete tag bar
+    const deleteTagBar = document.getElementById('deleteTagBar');
+    const currentFilterTagName = document.getElementById('currentFilterTagName');
+    if (currentTagFilters.length > 0) {
+      deleteTagBar.style.display = 'flex';
+      currentFilterTagName.textContent = currentTagFilters.join(', ');
+    } else {
+      deleteTagBar.style.display = 'none';
+    }
+    
+    renderCards();
+    renderTagFilterUI();
+  }
+
+  function clearTagFilters() {
+    currentTagFilters = [];
+    const deleteTagBar = document.getElementById('deleteTagBar');
+    deleteTagBar.style.display = 'none';
+    renderCards();
+    renderTagFilterUI();
+  }
+
+  function renderTagFilterUI() {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Get all unique tags from the deck
+    const allTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+    
+    const tagFilterContainer = document.getElementById('tagFilterContainer');
+    const tagDropdownLabel = document.getElementById('tagDropdownLabel');
+    const clearTagsBtn = document.getElementById('clearTagsBtn');
+    
+    // Update dropdown label
+    if (currentTagFilters.length === 0) {
+      tagDropdownLabel.textContent = 'Select Tags';
+    } else if (currentTagFilters.length === 1) {
+      tagDropdownLabel.textContent = currentTagFilters[0];
+    } else {
+      tagDropdownLabel.textContent = `${currentTagFilters.length} tags selected`;
+    }
+    
+    // Show/hide clear button
+    clearTagsBtn.style.display = currentTagFilters.length > 0 ? 'block' : 'none';
+    
+    // Render available tags as checkboxes
+    if (allTags.size === 0) {
+      tagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3); padding:8px;">No tags available</span>';
+    } else {
+      tagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
+        const isSelected = currentTagFilters.includes(tag);
+        return `<div class="tag-dropdown-item">
+          <input type="checkbox" id="tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}" ${isSelected ? 'checked' : ''} onchange="setTagFilter('${tag.replace(/'/g, "\\'")}')">
+          <label for="tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function toggleTagDropdown() {
+    const menu = document.getElementById('tagDropdownMenu');
+    const btn = document.querySelector('.tag-dropdown-btn');
+    const isOpen = menu.style.display !== 'none';
+    
+    menu.style.display = isOpen ? 'none' : 'block';
+    btn.classList.toggle('open', !isOpen);
+    
+    // Close dropdown when clicking outside
+    if (!isOpen) {
+      setTimeout(() => {
+        document.addEventListener('click', closeTagDropdownOnClickOutside);
+      }, 0);
+    }
+  }
+
+  function closeTagDropdownOnClickOutside(e) {
+    const container = document.querySelector('.tag-dropdown-container');
+    if (container && !container.contains(e.target)) {
+      const menu = document.getElementById('tagDropdownMenu');
+      const btn = document.querySelector('.tag-dropdown-btn');
+      menu.style.display = 'none';
+      btn.classList.remove('open');
+      document.removeEventListener('click', closeTagDropdownOnClickOutside);
+    }
+  }
+
+  async function deleteAllWithTags() {
+    if (currentTagFilters.length === 0) return;
+    
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Find cards that have ANY of the selected tags
+    const cardsWithTags = deck.cards.filter(card => {
+      const cardTags = card.tags || [];
+      return currentTagFilters.some(tag => cardTags.includes(tag));
+    });
+    
+    if (cardsWithTags.length === 0) {
+      alert('No cards found with these tags.');
+      return;
+    }
+    
+    const tagList = currentTagFilters.join(', ');
+    const confirmed = await showConfirm(
+      'Delete All Cards with Tags',
+      `Are you sure you want to delete all ${cardsWithTags.length} card${cardsWithTags.length !== 1 ? 's' : ''} with the tags "${tagList}"? This action cannot be undone.`,
+      'Delete Cards'
+    );
+    if (!confirmed) return;
+    
+    saveState();
+    // Remove cards that have ANY of the selected tags
+    deck.cards = deck.cards.filter(card => {
+      const cardTags = card.tags || [];
+      return !currentTagFilters.some(tag => cardTags.includes(tag));
+    });
+    save();
+    
+    // Reset tag filters
+    clearTagFilters();
+    
+    renderCards();
+  }
+
+  // Study Mode Filters
+  function setStudyFilter(filter) {
+    studyFilter = filter;
+    // Update button states
+    document.querySelectorAll('[data-study-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.studyFilter === filter);
+    });
+    // Restart study with new filter
+    restartStudyWithFilters();
+  }
+
+  function setStudyTagFilter(tag) {
+    // Toggle tag in the study filter array
+    const index = studyTagFilters.indexOf(tag);
+    if (index === -1) {
+      studyTagFilters.push(tag);
+    } else {
+      studyTagFilters.splice(index, 1);
+    }
+    // Restart study with new filter
+    restartStudyWithFilters();
+  }
+
+  function getStudyFilteredCards() {
+    const deck = getCurrentDeck();
+    if (!deck) return [];
+    
+    let filteredCards = deck.cards;
+    
+    // Apply learned filter
+    if (studyFilter === 'learned') {
+      filteredCards = filteredCards.filter(c => c.learned);
+    } else if (studyFilter === 'not-learned') {
+      filteredCards = filteredCards.filter(c => !c.learned);
+    }
+    
+    // Apply tag filters (OR logic - cards with ANY of the selected tags)
+    if (studyTagFilters.length > 0) {
+      filteredCards = filteredCards.filter(c => {
+        const cardTags = c.tags || [];
+        return studyTagFilters.some(tag => cardTags.includes(tag));
+      });
+    }
+    
+    return filteredCards;
+  }
+
+  function renderStudyTagFilterUI() {
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Get all unique tags from the deck
+    const allTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => allTags.add(tag));
+      }
+    });
+    
+    const studyTagFilterContainer = document.getElementById('studyTagFilterContainer');
+    const studyTagDropdownLabel = document.getElementById('studyTagDropdownLabel');
+    const studyClearTagsBtn = document.getElementById('studyClearTagsBtn');
+    
+    // Update dropdown label
+    if (studyTagFilters.length === 0) {
+      studyTagDropdownLabel.textContent = 'Select Tags';
+    } else if (studyTagFilters.length === 1) {
+      studyTagDropdownLabel.textContent = studyTagFilters[0];
+    } else {
+      studyTagDropdownLabel.textContent = `${studyTagFilters.length} tags selected`;
+    }
+    
+    // Show/hide clear button
+    studyClearTagsBtn.style.display = studyTagFilters.length > 0 ? 'block' : 'none';
+    
+    // Render available tags as checkboxes
+    if (allTags.size === 0) {
+      studyTagFilterContainer.innerHTML = '<span style="font-size:12px; color:var(--text3); padding:8px;">No tags available</span>';
+    } else {
+      studyTagFilterContainer.innerHTML = Array.from(allTags).sort().map(tag => {
+        const isSelected = studyTagFilters.includes(tag);
+        return `<div class="tag-dropdown-item">
+          <input type="checkbox" id="study-tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}" ${isSelected ? 'checked' : ''} onchange="setStudyTagFilter('${tag.replace(/'/g, "\\'")}')">
+          <label for="study-tag-${tag.replace(/[^a-zA-Z0-9]/g, '-')}">${tag}</label>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  function clearStudyTagFilters() {
+    studyTagFilters = [];
+    renderStudyTagFilterUI();
+    restartStudyWithFilters();
+  }
+
+  function toggleStudyTagDropdown() {
+    const menu = document.getElementById('studyTagDropdownMenu');
+    const btn = document.querySelector('#studyView .tag-dropdown-btn');
+    const isOpen = menu.style.display !== 'none';
+    
+    menu.style.display = isOpen ? 'none' : 'block';
+    btn.classList.toggle('open', !isOpen);
+    
+    // Close dropdown when clicking outside
+    if (!isOpen) {
+      setTimeout(() => {
+        document.addEventListener('click', closeStudyTagDropdownOnClickOutside);
+      }, 0);
+    }
+  }
+
+  function closeStudyTagDropdownOnClickOutside(e) {
+    const container = document.querySelector('#studyView .tag-dropdown-container');
+    if (container && !container.contains(e.target)) {
+      const menu = document.getElementById('studyTagDropdownMenu');
+      const btn = document.querySelector('#studyView .tag-dropdown-btn');
+      menu.style.display = 'none';
+      btn.classList.remove('open');
+      document.removeEventListener('click', closeStudyTagDropdownOnClickOutside);
+    }
+  }
+
+  function restartStudyWithFilters() {
+    const filteredCards = getStudyFilteredCards();
+    
+    if (filteredCards.length === 0) {
+      document.getElementById('studyCardArea').style.display = 'none';
+      document.getElementById('studyResult').style.display = 'block';
+      document.getElementById('resultText').textContent = 'No cards match the current filters.';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressText').textContent = '0 / 0';
+      return;
+    }
+    
+    // Shuffle and restart
+    studyCards = shuffleArray([...filteredCards]);
+    studyIndex = 0;
+    studyFlipped = false;
+    knownCount = 0;
+    
+    document.getElementById('studyCardArea').style.display = 'block';
+    document.getElementById('studyResult').style.display = 'none';
+    
+    renderStudyCard();
+  }
+
+  async function resetProgress() {
+    const confirmed = await showConfirm(
+      'Reset Progress',
+      'Are you sure you want to reset all learning progress? This will mark all cards as not learned.',
+      'Reset Progress'
+    );
+    if (!confirmed) return;
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    saveState();
+    deck.cards.forEach(card => card.learned = false);
+    save();
+    renderCards();
+  }
+
+  // Bulk Selection Functions
+  function toggleSelectionMode() {
+    selectionMode = !selectionMode;
+    selectedCardIds.clear();
+    
+    const btn = document.getElementById('selectModeBtn');
+    btn.classList.toggle('active', selectionMode);
+    btn.textContent = selectionMode ? 'Done' : 'Select';
+    
+    updateBulkUI();
+    renderCards();
+  }
+
+  function exitSelectionMode() {
+    selectionMode = false;
+    selectedCardIds.clear();
+    
+    const btn = document.getElementById('selectModeBtn');
+    btn.classList.remove('active');
+    btn.textContent = 'Select';
+    
+    updateBulkUI();
+    renderCards();
+  }
+
+  function toggleCardSelection(cardId) {
+    if (selectedCardIds.has(cardId)) {
+      selectedCardIds.delete(cardId);
+    } else {
+      selectedCardIds.add(cardId);
+    }
+    updateBulkUI();
+  }
+
+  function toggleSelectAll(checked) {
+    const filteredCards = getFilteredCards();
+    if (checked) {
+      filteredCards.forEach(card => selectedCardIds.add(card.id));
+    } else {
+      selectedCardIds.clear();
+    }
+    updateBulkUI();
+    renderCards();
+  }
+
+  function updateBulkUI() {
+    const bulkBar = document.getElementById('bulkActionsBar');
+    const selectAllBar = document.getElementById('selectAllBar');
+    const countEl = document.getElementById('selectedCount');
+    const selectAllCheckbox = document.getElementById('selectAllCheckbox');
+    
+    if (selectionMode) {
+      selectAllBar.style.display = 'flex';
+      
+      if (selectedCardIds.size > 0) {
+        bulkBar.style.display = 'flex';
+        countEl.textContent = `${selectedCardIds.size} selected`;
+      } else {
+        bulkBar.style.display = 'none';
+      }
+      
+      // Update select all checkbox state
+      const filteredCards = getFilteredCards();
+      const allSelected = filteredCards.length > 0 && filteredCards.every(card => selectedCardIds.has(card.id));
+      selectAllCheckbox.checked = allSelected;
+    } else {
+      bulkBar.style.display = 'none';
+      selectAllBar.style.display = 'none';
+    }
+  }
+
+  async function bulkAddTag() {
+    if (selectedCardIds.size === 0) return;
+    
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    // Get all existing tags from the deck
+    const existingTags = new Set();
+    deck.cards.forEach(card => {
+      if (card.tags) {
+        card.tags.forEach(tag => existingTags.add(tag));
+      }
+    });
+    
+    const tagsToAdd = await showTagAddModal('Add Tags', 'Select existing tags or create new ones:', Array.from(existingTags).sort());
+    if (!tagsToAdd || tagsToAdd.length === 0) return;
+    
+    saveState();
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id)) {
+        if (!card.tags) card.tags = [];
+        tagsToAdd.forEach(tag => {
+          if (!card.tags.includes(tag)) {
+            card.tags.push(tag);
+          }
+        });
+      }
+    });
+    
+    save();
+    // Don't exit selection mode - let user continue or undo
+    renderCards();
+  }
+
+  async function bulkRemoveTag() {
+    if (selectedCardIds.size === 0) return;
+    
+    // Get all tags from selected cards
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    const tagsInSelection = new Set();
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id) && card.tags) {
+        card.tags.forEach(tag => tagsInSelection.add(tag));
+      }
+    });
+    
+    if (tagsInSelection.size === 0) {
+      alert('No tags found in selected cards.');
+      return;
+    }
+    
+    const tagsToRemove = await showTagRemovalModal('Remove Tags', 'Select tags to remove from selected cards:', Array.from(tagsInSelection).sort());
+    if (!tagsToRemove || tagsToRemove.length === 0) return;
+    
+    saveState();
+    // Remove all selected tags from all selected cards
+    deck.cards.forEach(card => {
+      if (selectedCardIds.has(card.id) && card.tags) {
+        card.tags = card.tags.filter(t => !tagsToRemove.includes(t));
+      }
+    });
+    
+    save();
+    exitSelectionMode();
+    renderCards();
+  }
+
+  async function bulkDelete() {
+    if (selectedCardIds.size === 0) return;
+    
+    const confirmed = await showConfirm(
+      'Delete Selected Cards',
+      `Are you sure you want to delete ${selectedCardIds.size} card${selectedCardIds.size !== 1 ? 's' : ''}? This action cannot be undone.`,
+      'Delete Cards'
+    );
+    if (!confirmed) return;
+    
+    const deck = getCurrentDeck();
+    if (!deck) return;
+    
+    saveState();
+    deck.cards = deck.cards.filter(card => !selectedCardIds.has(card.id));
+    save();
+    exitSelectionMode();
+    renderCards();
+  }
+
+  // Study Mode
+  function startStudy() {
+    const deck = getCurrentDeck();
+    if (!deck || deck.cards.length === 0) return;
+
+    // Reset study filters to match current view filters
+    studyFilter = currentFilter;
+    studyTagFilters = [...currentTagFilters];
+    
+    // Update study filter buttons
+    document.querySelectorAll('[data-study-filter]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.studyFilter === studyFilter);
+    });
+    
+    // Populate study tag filter UI
+    renderStudyTagFilterUI();
+
+    // Get filtered cards and shuffle them
+    studyCards = shuffleArray([...getStudyFilteredCards()]);
+    
+    if (studyCards.length === 0) {
+      document.getElementById('studyDeckName').textContent = deck.name;
+      document.getElementById('studyCardArea').style.display = 'none';
+      document.getElementById('studyResult').style.display = 'block';
+      document.getElementById('resultText').textContent = 'No cards match the current filters.';
+      document.getElementById('progressFill').style.width = '0%';
+      document.getElementById('progressText').textContent = '0 / 0';
+      showView('studyView');
+      return;
+    }
+
+    studyIndex = 0;
+    studyFlipped = false;
+    knownCount = 0;
+
+    document.getElementById('studyDeckName').textContent = deck.name;
+    document.getElementById('studyCardArea').style.display = 'block';
+    document.getElementById('studyResult').style.display = 'none';
+
+    renderStudyCard();
+    showView('studyView');
+  }
+
+  function renderStudyCard() {
+    const card = studyCards[studyIndex];
+    
+    document.getElementById('studyFront').textContent = card.front;
+    document.getElementById('studyBack').textContent = card.back;
+    
+    // Reset flip
+    studyFlipped = false;
+    document.getElementById('studyCardInner').classList.remove('flipped');
+    document.getElementById('studyHint').textContent = 'Click the card to reveal the answer';
+    document.getElementById('studyRating').style.display = 'none';
+
+    // Sync heights of both faces
+    syncCardHeights();
+
+    // Progress
+    const progress = ((studyIndex + 1) / studyCards.length) * 100;
+    document.getElementById('progressFill').style.width = progress + '%';
+    document.getElementById('progressText').textContent = `${studyIndex + 1} / ${studyCards.length}`;
+
+    // Nav buttons
+    document.getElementById('prevBtn').disabled = studyIndex === 0;
+    document.getElementById('nextBtn').disabled = studyIndex === studyCards.length - 1;
+  }
+
+  function syncCardHeights() {
+    const front = document.querySelector('.study-card-front');
+    const back = document.querySelector('.study-card-back');
+    const container = document.getElementById('studyCardInner');
+    const containerEl = document.querySelector('.study-card-container');
+    
+    // Temporarily make both faces visible to measure their natural heights
+    front.style.position = 'relative';
+    back.style.position = 'relative';
+    back.style.transform = 'none';
+    front.style.height = 'auto';
+    back.style.height = 'auto';
+    
+    const frontHeight = front.scrollHeight;
+    const backHeight = back.scrollHeight;
+    
+    // Use the taller one, with a minimum of 280px
+    const targetHeight = Math.max(frontHeight, backHeight, 280);
+    
+    // Reset styles
+    front.style.position = '';
+    back.style.position = '';
+    back.style.transform = '';
+    front.style.height = '';
+    back.style.height = '';
+    
+    // Set container height
+    container.style.height = targetHeight + 'px';
+    containerEl.style.height = targetHeight + 'px';
+  }
+
+  function flipCard() {
+    studyFlipped = !studyFlipped;
+    document.getElementById('studyCardInner').classList.toggle('flipped', studyFlipped);
+    
+    if (studyFlipped) {
+      document.getElementById('studyHint').textContent = 'How well did you know this?';
+      document.getElementById('studyRating').style.display = 'flex';
+    } else {
+      document.getElementById('studyHint').textContent = 'Click the card to reveal the answer';
+      document.getElementById('studyRating').style.display = 'none';
+    }
+  }
+
+  function rateCard(known) {
+    const card = studyCards[studyIndex];
+    
+    // Update learned state in the actual deck
+    const deck = getCurrentDeck();
+    const actualCard = deck.cards.find(c => c.id === card.id);
+    if (actualCard) {
+      actualCard.learned = known;
+      save();
+    }
+    
+    if (known) knownCount++;
+    nextCard();
+  }
+
+  function nextCard() {
+    if (studyIndex < studyCards.length - 1) {
+      studyIndex++;
+      renderStudyCard();
+    } else {
+      showResult();
+    }
+  }
+
+  function prevCard() {
+    if (studyIndex > 0) {
+      studyIndex--;
+      renderStudyCard();
+    }
+  }
+
+  function showResult() {
+    document.getElementById('studyCardArea').style.display = 'none';
+    document.getElementById('studyResult').style.display = 'block';
+    document.getElementById('resultText').textContent = 
+      `You knew ${knownCount} out of ${studyCards.length} cards`;
+    
+    // Update progress to 100%
+    document.getElementById('progressFill').style.width = '100%';
+    document.getElementById('progressText').textContent = `${studyCards.length} / ${studyCards.length}`;
+  }
+
+  function restartStudy() {
+    startStudy();
+  }
+
+  function tryAgain() {
+    // Restart the current study session with the same filtered cards
+    studyCards = shuffleArray([...studyCards]);
+    studyIndex = 0;
+    studyFlipped = false;
+    knownCount = 0;
+    
+    document.getElementById('studyCardArea').style.display = 'block';
+    document.getElementById('studyResult').style.display = 'none';
+    
+    renderStudyCard();
+  }
+
+  function copyStudyCard() {
+    const currentCard = studyCards[studyIndex];
+    if (!currentCard) return;
+    
+    const text = formatCardForCopy(currentCard);
+    copyToClipboard(text);
+  }
+
+  function editStudyCard() {
+    const currentCard = studyCards[studyIndex];
+    if (!currentCard) return;
+    
+    editCard(currentCard.id);
+  }
+
+  // Utilities
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  // Custom Input Modal
+  function showInput(title, message, placeholder = '') {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = placeholder;
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        cancelBtn.removeEventListener('click', onCancel);
+        okBtn.removeEventListener('click', onOk);
+        inputEl.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = () => {
+        const value = inputEl.value.trim();
+        cleanup();
+        resolve(value || null);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Enter') {
+          onOk();
+        } else if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      inputEl.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Tag Input Modal with dropdown
+  function showTagInput(title, message, existingTags = []) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Type new tag or select below';
+      
+      // Create dropdown for existing tags
+      let selectHtml = '';
+      if (existingTags.length > 0) {
+        selectHtml = `
+          <div style="margin-top:12px;">
+            <label style="display:block; font-size:12px; color:var(--text2); margin-bottom:6px;">Existing tags:</label>
+            <select id="tagSelectDropdown" style="width:100%; padding:10px 12px; border:1px solid var(--border); border-radius:6px; background:var(--bg3); color:var(--text); font-size:14px; outline:none; cursor:pointer; transition:border-color 0.2s;" onfocus="this.style.borderColor='var(--accent)'" onblur="this.style.borderColor='var(--border)'">
+              <option value="">-- Select existing tag --</option>
+              ${existingTags.map(tag => `<option value="${tag}">${tag}</option>`).join('')}
+            </select>
+          </div>
+        `;
+      } else {
+        selectHtml = `
+          <div style="margin-top:12px; padding:12px; background:var(--bg3); border-radius:6px; text-align:center;">
+            <p style="color:var(--text3); font-size:13px; margin:0;">No existing tags in this deck</p>
+          </div>
+        `;
+      }
+      
+      messageEl.innerHTML = message + selectHtml;
+      
+      modal.classList.add('active');
+      
+      // Setup dropdown behavior
+      const selectEl = document.getElementById('tagSelectDropdown');
+      if (selectEl) {
+        selectEl.addEventListener('change', function() {
+          if (this.value) {
+            inputEl.value = this.value;
+          }
+        });
+      }
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        cancelBtn.removeEventListener('click', onCancel);
+        okBtn.removeEventListener('click', onOk);
+        inputEl.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = () => {
+        const value = inputEl.value.trim();
+        cleanup();
+        resolve(value || null);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Enter') {
+          onOk();
+        } else if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      inputEl.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Reset modal completely
+  function resetInputModal() {
+    const modal = document.getElementById('inputModal');
+    const titleEl = document.getElementById('inputModalTitle');
+    const messageEl = document.getElementById('inputModalMessage');
+    const inputEl = document.getElementById('inputModalField');
+    const cancelBtn = document.getElementById('inputModalCancelBtn');
+    const okBtn = document.getElementById('inputModalOkBtn');
+    
+    // Close modal
+    modal.classList.remove('active');
+    
+    // Reset all elements
+    titleEl.textContent = '';
+    messageEl.innerHTML = '';
+    inputEl.value = '';
+    inputEl.placeholder = '';
+    
+    // Reset button
+    okBtn.textContent = 'Confirm';
+    okBtn.className = 'btn btn-primary';
+    okBtn.disabled = false;
+    okBtn.style.opacity = '1';
+    okBtn.style.cursor = 'pointer';
+    
+    // Remove all event listeners by cloning buttons
+    const newCancelBtn = cancelBtn.cloneNode(true);
+    cancelBtn.parentNode.replaceChild(newCancelBtn, cancelBtn);
+    
+    const newOkBtn = okBtn.cloneNode(true);
+    okBtn.parentNode.replaceChild(newOkBtn, okBtn);
+  }
+
+  // Custom Tag Removal Modal with search and live list
+  function showTagRemovalModal(title, message, availableTags = []) {
+    return new Promise((resolve) => {
+      // Completely reset modal before opening
+      resetInputModal();
+      
+      // Get fresh references after reset
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      // Reset button state
+      okBtn.disabled = true;
+      okBtn.style.opacity = '0.5';
+      okBtn.style.cursor = 'not-allowed';
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Search tags...';
+      
+      // Create searchable list with checkboxes
+      const listHtml = `
+        <div style="margin-top:12px;">
+          <div id="tagSearchList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg2);">
+            ${availableTags.length > 0 ? availableTags.map(tag => `
+              <label class="tag-list-item" data-tag="${tag}" style="display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+                <input type="checkbox" class="tag-checkbox" value="${tag}" style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+                <span>${tag}</span>
+              </label>
+            `).join('') : '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">No tags available</div>'}
+          </div>
+          <div id="selectedTagsCount" style="margin-top:8px; font-size:12px; color:var(--text3);">0 tags selected</div>
+        </div>
+      `;
+      
+      messageEl.innerHTML = message + listHtml;
+      
+      // Change OK button to "Remove Selected"
+      okBtn.textContent = 'Remove Selected';
+      okBtn.className = 'btn btn-danger';
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      // Setup search filtering
+      const searchInput = inputEl;
+      const tagList = document.getElementById('tagSearchList');
+      const countDisplay = document.getElementById('selectedTagsCount');
+      
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const items = tagList.querySelectorAll('.tag-list-item');
+        
+        items.forEach(item => {
+          const tag = item.getAttribute('data-tag').toLowerCase();
+          if (tag.includes(searchTerm)) {
+            item.style.display = 'flex';
+          } else {
+            item.style.display = 'none';
+          }
+        });
+      });
+      
+      // Track checkbox changes
+      const checkboxes = tagList.querySelectorAll('.tag-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+      
+      function updateSelectedCount() {
+        const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
+        countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+        
+        // Enable/disable the OK button based on selection
+        okBtn.disabled = checked === 0;
+        okBtn.style.opacity = checked === 0 ? '0.5' : '1';
+        okBtn.style.cursor = checked === 0 ? 'not-allowed' : 'pointer';
+      }
+      
+      // Initial button state
+      updateSelectedCount();
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        okBtn.textContent = 'Confirm';
+        okBtn.className = 'btn btn-primary';
+        cancelBtn.removeEventListener('click', onCancel);
+        searchInput.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = async () => {
+        const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        
+        // Show confirmation modal
+        const confirmed = await showConfirm(
+          'Remove Tags',
+          `Are you sure you want to remove ${selectedTags.length} tag${selectedTags.length !== 1 ? 's' : ''} (${selectedTags.join(', ')}) from the selected cards? This action cannot be undone.`,
+          'Remove Tags'
+        );
+        
+        if (!confirmed) {
+          return;
+        }
+        
+        cleanup();
+        resolve(selectedTags);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      searchInput.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Tag Add Modal with search, live list, and new tag creation
+  function showTagAddModal(title, message, availableTags = []) {
+    return new Promise((resolve) => {
+      // Completely reset modal before opening
+      resetInputModal();
+      
+      // Get fresh references after reset
+      const modal = document.getElementById('inputModal');
+      const titleEl = document.getElementById('inputModalTitle');
+      const messageEl = document.getElementById('inputModalMessage');
+      const inputEl = document.getElementById('inputModalField');
+      const cancelBtn = document.getElementById('inputModalCancelBtn');
+      const okBtn = document.getElementById('inputModalOkBtn');
+      
+      // Reset button state
+      okBtn.disabled = true;
+      okBtn.style.opacity = '0.5';
+      okBtn.style.cursor = 'not-allowed';
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      inputEl.value = '';
+      inputEl.placeholder = 'Search tags or type to create new...';
+      
+      // Create searchable list with checkboxes and new tag option
+      const listHtml = `
+        <div style="margin-top:12px;">
+          <div id="tagSearchList" style="max-height:200px; overflow-y:auto; border:1px solid var(--border); border-radius:6px; background:var(--bg2);">
+            ${availableTags.length > 0 ? availableTags.map(tag => `
+              <label class="tag-list-item" data-tag="${tag}" style="display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text);" onmouseover="this.style.background='var(--bg3)'" onmouseout="this.style.background='var(--bg2)'">
+                <input type="checkbox" class="tag-checkbox" value="${tag}" style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+                <span>${tag}</span>
+              </label>
+            `).join('') : '<div style="padding:20px; text-align:center; color:var(--text3); font-size:13px;">No existing tags</div>'}
+          </div>
+          <div id="newTagOption" style="display:none; margin-top:8px; padding:10px 12px; background:var(--bg3); border-radius:6px; cursor:pointer; transition:background 0.2s;" onmouseover="this.style.background='var(--border)'" onmouseout="this.style.background='var(--bg3)'" onclick="addNewTagFromSearch()">
+            <span style="font-size:14px; color:var(--accent);">+ Create new tag: <strong id="newTagName"></strong></span>
+          </div>
+          <div id="selectedTagsCount" style="margin-top:8px; font-size:12px; color:var(--text3);">0 tags selected</div>
+        </div>
+      `;
+      
+      messageEl.innerHTML = message + listHtml;
+      
+      // Change OK button to "Add Selected"
+      okBtn.textContent = 'Add Selected';
+      okBtn.className = 'btn btn-primary';
+      
+      modal.classList.add('active');
+      
+      // Focus input after modal opens
+      setTimeout(() => inputEl.focus(), 100);
+      
+      // Setup search filtering and new tag detection
+      const searchInput = inputEl;
+      const tagList = document.getElementById('tagSearchList');
+      const countDisplay = document.getElementById('selectedTagsCount');
+      const newTagOption = document.getElementById('newTagOption');
+      const newTagName = document.getElementById('newTagName');
+      
+      searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+        const items = tagList.querySelectorAll('.tag-list-item');
+        let hasVisibleItems = false;
+        
+        items.forEach(item => {
+          const tag = item.getAttribute('data-tag').toLowerCase();
+          if (tag.includes(searchTerm)) {
+            item.style.display = 'flex';
+            hasVisibleItems = true;
+          } else {
+            item.style.display = 'none';
+          }
+        });
+        
+        // Show/hide new tag option
+        if (searchTerm && !availableTags.map(t => t.toLowerCase()).includes(searchTerm)) {
+          newTagOption.style.display = 'block';
+          newTagName.textContent = searchTerm;
+        } else {
+          newTagOption.style.display = 'none';
+        }
+      });
+      
+      // Track checkbox changes
+      const checkboxes = tagList.querySelectorAll('.tag-checkbox');
+      checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', updateSelectedCount);
+      });
+      
+      function updateSelectedCount() {
+        const checked = tagList.querySelectorAll('.tag-checkbox:checked').length;
+        countDisplay.textContent = `${checked} tag${checked !== 1 ? 's' : ''} selected`;
+        
+        // Enable/disable the OK button based on selection
+        okBtn.disabled = checked === 0;
+        okBtn.style.opacity = checked === 0 ? '0.5' : '1';
+        okBtn.style.cursor = checked === 0 ? 'not-allowed' : 'pointer';
+      }
+      
+      // Initial button state
+      updateSelectedCount();
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        okBtn.textContent = 'Confirm';
+        okBtn.className = 'btn btn-primary';
+        cancelBtn.removeEventListener('click', onCancel);
+        searchInput.removeEventListener('keydown', onKeydown);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(null);
+      };
+      
+      const onOk = async () => {
+        const selectedTags = Array.from(tagList.querySelectorAll('.tag-checkbox:checked')).map(cb => cb.value);
+        
+        cleanup();
+        resolve(selectedTags);
+      };
+      
+      const onKeydown = (e) => {
+        if (e.key === 'Escape') {
+          onCancel();
+        } else if (e.key === 'Enter') {
+          // If there's text in the input and it's not an existing tag, create it
+          const searchTerm = inputEl.value.trim();
+          if (searchTerm && !availableTags.map(t => t.toLowerCase()).includes(searchTerm.toLowerCase())) {
+            addNewTagFromSearch();
+          } else {
+            onOk();
+          }
+        }
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          onCancel();
+        }
+      };
+      
+      // Global function to add new tag from search
+      window.addNewTagFromSearch = function() {
+        const searchTerm = inputEl.value.trim();
+        if (!searchTerm) return;
+        
+        // Create new checkbox and add to list
+        const newTag = searchTerm;
+        const newLabel = document.createElement('label');
+        newLabel.className = 'tag-list-item';
+        newLabel.setAttribute('data-tag', newTag);
+        newLabel.style.cssText = 'display:flex; align-items:center; padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); transition:background 0.2s; font-size:14px; color:var(--text); background:var(--bg3);';
+        newLabel.innerHTML = `
+          <input type="checkbox" class="tag-checkbox" value="${newTag}" checked style="margin-right:10px; cursor:pointer; accent-color:var(--accent);">
+          <span>${newTag} <span style="color:var(--accent); font-size:12px;">(new)</span></span>
+        `;
+        
+        // Add to list and update available tags
+        tagList.appendChild(newLabel);
+        availableTags.push(newTag);
+        
+        // Clear search and hide new tag option
+        inputEl.value = '';
+        newTagOption.style.display = 'none';
+        
+        // Add event listener to new checkbox
+        const newCheckbox = newLabel.querySelector('.tag-checkbox');
+        newCheckbox.addEventListener('change', updateSelectedCount);
+        updateSelectedCount();
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      searchInput.addEventListener('keydown', onKeydown);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Custom Confirm Modal
+  function showConfirm(title, message, okText = 'Delete') {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirmModal');
+      const titleEl = document.getElementById('confirmTitle');
+      const messageEl = document.getElementById('confirmMessage');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+      const okBtn = document.getElementById('confirmOkBtn');
+      
+      titleEl.textContent = title;
+      messageEl.textContent = message;
+      okBtn.textContent = okText;
+      
+      modal.classList.add('active');
+      
+      const cleanup = () => {
+        modal.classList.remove('active');
+        cancelBtn.removeEventListener('click', onCancel);
+        okBtn.removeEventListener('click', onOk);
+        modal.removeEventListener('click', onBackdropClick);
+      };
+      
+      const onCancel = () => {
+        cleanup();
+        resolve(false);
+      };
+      
+      const onOk = () => {
+        cleanup();
+        resolve(true);
+      };
+      
+      const onBackdropClick = (e) => {
+        if (e.target === modal) {
+          cleanup();
+          resolve(false);
+        }
+      };
+      
+      cancelBtn.addEventListener('click', onCancel);
+      okBtn.addEventListener('click', onOk);
+      modal.addEventListener('click', onBackdropClick);
+    });
+  }
+
+  // Enter key support for new tag input
+  document.getElementById('newTagText').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewTag();
+    } else if (e.key === 'Escape') {
+      hideNewTagInput();
+    }
+  });
+
+  // Enter key support for edit tag input
+  document.getElementById('newEditTagText').addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addNewEditTag();
+    } else if (e.key === 'Escape') {
+      hideNewEditTagInput();
+    }
+  });
+
+  // Horizontal scroll for tag tabs
+  function enableHorizontalScroll(element) {
+    element.addEventListener('wheel', function(e) {
+      if (e.deltaY !== 0) {
+        e.preventDefault();
+        element.scrollLeft += e.deltaY;
+      }
+    }, { passive: false });
+
+    // Check if there's scrollable content
+    function checkScroll() {
+      const wrapper = element.parentElement;
+      if (element.scrollWidth > element.clientWidth) {
+        wrapper.classList.add('has-scroll');
+      } else {
+        wrapper.classList.remove('has-scroll');
+      }
+    }
+
+    // Check on scroll and resize
+    element.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+    
+    // Initial check
+    setTimeout(checkScroll, 100);
+  }
+
+  // Enable horizontal scroll on both tag containers
+  const tagTabsContainer = document.getElementById('tagTabs');
+  const editTagTabsContainer = document.getElementById('editTagTabs');
+  
+  if (tagTabsContainer) {
+    enableHorizontalScroll(tagTabsContainer);
+  }
+  
+  if (editTagTabsContainer) {
+    enableHorizontalScroll(editTagTabsContainer);
+  }
+
+  // Touch support for horizontal scroll
+  let isDown = false;
+  let startX;
+  let scrollLeft;
+
+  function enableTouchScroll(element) {
+    element.addEventListener('mousedown', (e) => {
+      isDown = true;
+      startX = e.pageX - element.offsetLeft;
+      scrollLeft = element.scrollLeft;
+      element.style.cursor = 'grabbing';
+    });
+
+    element.addEventListener('mouseleave', () => {
+      isDown = false;
+      element.style.cursor = 'grab';
+    });
+
+    element.addEventListener('mouseup', () => {
+      isDown = false;
+      element.style.cursor = 'grab';
+    });
+
+    element.addEventListener('mousemove', (e) => {
+      if (!isDown) return;
+      e.preventDefault();
+      const x = e.pageX - element.offsetLeft;
+      const walk = (x - startX) * 2;
+      element.scrollLeft = scrollLeft - walk;
+    });
+
+    element.style.cursor = 'grab';
+  }
+
+  if (tagTabsContainer) {
+    enableTouchScroll(tagTabsContainer);
+  }
+  
+  if (editTagTabsContainer) {
+    enableTouchScroll(editTagTabsContainer);
+  }
+
+  // Close modal on Escape key and undo on Ctrl+Z
+  document.addEventListener('keydown', function(e) {
+    // Handle Escape key for modals
+    if (e.key === 'Escape') {
+      const editModal = document.getElementById('editModal');
+      const confirmModal = document.getElementById('confirmModal');
+      const inputModal = document.getElementById('inputModal');
+      const shareModal = document.getElementById('shareModal');
+      const p2pModal = document.getElementById('p2pShareModal');
+      const scannerModal = document.getElementById('scannerModal');
+      
+      if (confirmModal.classList.contains('active')) {
+        document.getElementById('confirmCancelBtn').click();
+      } else if (inputModal.classList.contains('active')) {
+        document.getElementById('inputModalCancelBtn').click();
+      } else if (scannerModal.classList.contains('active')) {
+        closeScanner();
+      } else if (p2pModal.classList.contains('active')) {
+        closeP2PShareModal();
+      } else if (shareModal.classList.contains('active')) {
+        closeShareModal();
+      } else if (editModal.classList.contains('active')) {
+        closeEditModal();
+      }
+    }
+    
+    // Handle Ctrl+Z for undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      // Don't undo if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      e.preventDefault();
+      undo();
+    }
+    
+    // Handle Ctrl+Y for redo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+      // Don't redo if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      e.preventDefault();
+      redo();
+    }
+  });
+
+  // Share Modal Functions
+  function showShareModal() {
+    const modal = document.getElementById('shareModal');
+    const qrContainer = document.getElementById('qrcode');
+    const shareLink = document.getElementById('shareLink');
+    
+    // Set the share link (for downloading the app)
+    shareLink.value = GITHUB_REPO_URL;
+    
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+    
+    // Generate QR code
+    new QRCode(qrContainer, {
+      text: GITHUB_REPO_URL,
+      width: 200,
+      height: 200,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeShareModal();
+      }
+    };
+  }
+
+  function closeShareModal() {
+    const modal = document.getElementById('shareModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    document.getElementById('copyFeedback').style.display = 'none';
+  }
+
+  function copyShareLink() {
+    const shareLink = document.getElementById('shareLink');
+    const feedback = document.getElementById('copyFeedback');
+    
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999); // For mobile
+    
+    try {
+      document.execCommand('copy');
+      feedback.style.display = 'block';
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
+    } catch (err) {
+      // Fallback for modern browsers
+      navigator.clipboard.writeText(shareLink.value).then(() => {
+        feedback.style.display = 'block';
+        setTimeout(() => {
+          feedback.style.display = 'none';
+        }, 2000);
+      });
+    }
+  }
+
+  // P2P Sharing Functions
+  function startP2PShare() {
+    const deck = getCurrentDeck();
+    if (!deck || deck.cards.length === 0) {
+      alert('No cards to share!');
+      return;
+    }
+
+    // Initialize PeerJS
+    const peerId = 'fc-' + Date.now().toString(36) + '-' + Math.random().toString(36).substr(2, 8);
+    peer = new Peer(peerId);
+
+    peer.on('open', (id) => {
+      console.log('P2P Peer ID:', id);
+      showP2PShareModal(id, deck);
+    });
+
+    peer.on('connection', (conn) => {
+      console.log('Incoming connection');
+      currentConnection = conn;
+      
+      conn.on('open', () => {
+        console.log('Connection established, sending deck');
+        document.getElementById('p2pStatus').textContent = 'Connected! Sending deck...';
+        document.getElementById('p2pStatus').style.color = 'var(--success)';
+        
+        // Send the deck data
+        conn.send({
+          type: 'deck',
+          data: deck
+        });
+        
+        setTimeout(() => {
+          document.getElementById('p2pStatus').textContent = 'Deck sent successfully!';
+          conn.close();
+          setTimeout(() => {
+            closeP2PShareModal();
+          }, 2000);
+        }, 1000);
+      });
+
+      conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('p2pStatus').textContent = 'Connection error: ' + err;
+        document.getElementById('p2pStatus').style.color = 'var(--danger)';
+      });
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      alert('P2P connection error: ' + err);
+    });
+  }
+
+  function showP2PShareModal(peerId, deck) {
+    const modal = document.getElementById('p2pShareModal');
+    const qrContainer = document.getElementById('p2pQrCode');
+    const shareLink = document.getElementById('p2pShareLink');
+    
+    // Generate the share link - just the peer ID
+    // If APP_URL is set, include it; otherwise just the ID
+    const shareUrl = APP_URL ? `${APP_URL}?receive=${peerId}` : peerId;
+    shareLink.value = shareUrl;
+    
+    // Clear previous QR code
+    qrContainer.innerHTML = '';
+    
+    // Generate QR code with higher quality for better scanning
+    new QRCode(qrContainer, {
+      text: shareUrl,
+      width: 280,
+      height: 280,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.H
+    });
+    
+    // Reset status
+    document.getElementById('p2pStatus').textContent = 'Waiting for connection...';
+    document.getElementById('p2pStatus').style.color = 'var(--text2)';
+    document.getElementById('p2pCopyFeedback').style.display = 'none';
+    
+    // Show sender view
+    document.getElementById('p2pSenderView').style.display = 'block';
+    document.getElementById('p2pReceiverView').style.display = 'none';
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeP2PShareModal();
+      }
+    };
+  }
+
+  function closeP2PShareModal() {
+    const modal = document.getElementById('p2pShareModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    
+    // Clean up PeerJS connection
+    if (peer) {
+      peer.destroy();
+      peer = null;
+    }
+    if (currentConnection) {
+      currentConnection.close();
+      currentConnection = null;
+    }
+  }
+
+  function copyP2PLink() {
+    const shareLink = document.getElementById('p2pShareLink');
+    const feedback = document.getElementById('p2pCopyFeedback');
+    
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999);
+    
+    try {
+      document.execCommand('copy');
+      feedback.style.display = 'block';
+      setTimeout(() => {
+        feedback.style.display = 'none';
+      }, 2000);
+    } catch (err) {
+      navigator.clipboard.writeText(shareLink.value).then(() => {
+        feedback.style.display = 'block';
+        setTimeout(() => {
+          feedback.style.display = 'none';
+        }, 2000);
+      });
+    }
+  }
+
+  // Check for incoming P2P connection on page load
+  function checkForP2PReceive() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const receiveId = urlParams.get('receive');
+    
+    if (receiveId) {
+      console.log('Attempting to receive deck from:', receiveId);
+      connectToP2PSender(receiveId);
+    }
+  }
+
+  function connectToP2PSender(peerId) {
+    console.log('Connecting to peer:', peerId);
+    
+    // Show the receive modal immediately with connecting status
+    showP2PReceiveModal();
+    document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--accent); font-size:14px;">Initializing connection...</p>';
+    
+    // Initialize PeerJS as receiver
+    peer = new Peer();
+
+    peer.on('open', (id) => {
+      console.log('Receiver Peer ID:', id);
+      document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--accent); font-size:14px;">Connecting to sender...</p>';
+      
+      // Connect to sender
+      const conn = peer.connect(peerId);
+      currentConnection = conn;
+      
+      conn.on('open', () => {
+        console.log('Connected to sender');
+        document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--success); font-size:14px;">Connected! Waiting for deck...</p>';
+      });
+
+      conn.on('data', (data) => {
+        console.log('Received data:', data);
+        if (data.type === 'deck') {
+          handleReceivedDeck(data.data);
+        }
+      });
+
+      conn.on('close', () => {
+        console.log('Connection closed');
+        if (!receivedDeckData) {
+          document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">Connection closed by sender.</p>';
+        }
+      });
+
+      conn.on('error', (err) => {
+        console.error('Connection error:', err);
+        document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">Connection error: ' + err + '</p>';
+      });
+    });
+
+    peer.on('error', (err) => {
+      console.error('Peer error:', err);
+      const errorMsg = err.toString();
+      let userMessage = 'P2P connection error: ' + err;
+      
+      if (errorMsg.includes('Peer ID could not be found') || errorMsg.includes('unavailable')) {
+        userMessage = 'Could not find the sender. Make sure:\n\n1. The sender is still on the share screen\n2. The sender hasn\'t closed the share modal\n3. Both devices have internet connection\n\nTry copying the code manually instead.';
+      } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
+        userMessage = 'Network error. Please check your internet connection and try again.';
+      }
+      
+      document.getElementById('p2pReceiverStatus').innerHTML = '<p style="color:var(--danger); font-size:14px;">' + userMessage + '</p>';
+    });
+  }
+
+  function showP2PReceiveModal() {
+    const modal = document.getElementById('p2pShareModal');
+    
+    // Show receiver view
+    document.getElementById('p2pSenderView').style.display = 'none';
+    document.getElementById('p2pReceiverView').style.display = 'block';
+    document.getElementById('p2pReceivedDeck').style.display = 'none';
+    document.getElementById('p2pReceiverStatus').style.display = 'block';
+    
+    // Update title
+    document.getElementById('p2pModalTitle').textContent = 'Receive Deck via P2P';
+    
+    // Show modal
+    modal.classList.add('active');
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeP2PShareModal();
+      }
+    };
+  }
+
+  let receivedDeckData = null;
+
+  function handleReceivedDeck(deck) {
+    receivedDeckData = deck;
+    
+    // Hide status, show deck preview
+    document.getElementById('p2pReceiverStatus').style.display = 'none';
+    document.getElementById('p2pReceivedDeck').style.display = 'block';
+    
+    // Show deck info
+    document.getElementById('p2pDeckName').textContent = deck.name;
+    document.getElementById('p2pDeckCount').textContent = `${deck.cards.length} card${deck.cards.length !== 1 ? 's' : ''}`;
+  }
+
+  function importReceivedDeck() {
+    if (!receivedDeckData) return;
+    
+    saveState();
+    // Create a new deck with a unique ID
+    const newDeck = {
+      id: Date.now().toString(),
+      name: receivedDeckData.name + ' (Received)',
+      cards: receivedDeckData.cards.map(card => ({
+        ...card,
+        id: Date.now().toString() + Math.random().toString(36).substr(2, 9),
+        learned: false // Reset learned status
+      }))
+    };
+    
+    decks.push(newDeck);
+    save();
+    
+    // Close modal and show success
+    closeP2PShareModal();
+    
+    // Navigate to the new deck
+    currentDeckId = newDeck.id;
+    renderCards();
+    showView('cardsView');
+    
+    alert('Deck imported successfully!');
+    
+    // Clean up URL
+    window.history.replaceState({}, document.title, window.location.pathname);
+  }
+
+  // QR Scanner Functions
+  let html5QrcodeScanner = null;
+
+  function showScanner() {
+    const modal = document.getElementById('scannerModal');
+    const status = document.getElementById('scannerStatus');
+    
+    // Show modal
+    modal.classList.add('active');
+    status.textContent = 'Initializing camera...';
+    status.style.color = 'var(--text2)';
+    
+    // Add backdrop click handler
+    modal.onclick = (e) => {
+      if (e.target === modal) {
+        closeScanner();
+      }
+    };
+    
+    // Initialize scanner after a short delay to ensure modal is visible
+    setTimeout(() => {
+      initScanner();
+    }, 300);
+  }
+
+  function closeScanner() {
+    const modal = document.getElementById('scannerModal');
+    modal.classList.remove('active');
+    modal.onclick = null;
+    
+    // Reset views
+    document.getElementById('scannerCameraView').style.display = 'block';
+    document.getElementById('scannerManualView').style.display = 'none';
+    document.getElementById('toggleScannerText').textContent = "Can't scan? Enter link manually";
+    document.getElementById('manualP2PUrl').value = '';
+    
+    // Stop scanner
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+      }).catch(err => {
+        console.log('Error stopping scanner:', err);
+      });
+    }
+  }
+
+  function initScanner() {
+    const status = document.getElementById('scannerStatus');
+    const cameraView = document.getElementById('scannerCameraView');
+    const manualView = document.getElementById('scannerManualView');
+    
+    // Check if running on file:// protocol
+    if (window.location.protocol === 'file:') {
+      status.textContent = 'Camera requires HTTPS. Use manual input below.';
+      status.style.color = 'var(--danger)';
+      setTimeout(() => {
+        cameraView.style.display = 'none';
+        manualView.style.display = 'block';
+        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+      }, 2000);
+      return;
+    }
+    
+    // Check if browser supports camera
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      status.textContent = 'Camera access not supported in this browser';
+      status.style.color = 'var(--danger)';
+      setTimeout(() => {
+        cameraView.style.display = 'none';
+        manualView.style.display = 'block';
+        document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+      }, 2000);
+      return;
+    }
+    
+    // Create scanner instance
+    html5QrcodeScanner = new Html5Qrcode("qr-reader");
+    
+    const config = {
+      fps: 15,
+      qrbox: function(viewfinderWidth, viewfinderHeight) {
+        let minEdge = Math.min(viewfinderWidth, viewfinderHeight);
+        let qrboxSize = Math.floor(minEdge * 0.7);
+        return { width: qrboxSize, height: qrboxSize };
+      },
+      aspectRatio: 1.0,
+      formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
+    };
+    
+    // Try to get camera constraints for better mobile support
+    const cameraConfig = {
+      facingMode: { exact: "environment" }
+    };
+    
+    html5QrcodeScanner.start(
+      cameraConfig,
+      config,
+      onScanSuccess,
+      onScanFailure
+    ).then(() => {
+      status.textContent = 'Point camera at QR code';
+      status.style.color = 'var(--success)';
+    }).catch(err => {
+      console.error('Scanner error with exact facingMode:', err);
+      
+      // Fallback: try without exact constraint
+      html5QrcodeScanner.start(
+        { facingMode: "environment" },
+        config,
+        onScanSuccess,
+        onScanFailure
+      ).then(() => {
+        status.textContent = 'Point camera at QR code';
+        status.style.color = 'var(--success)';
+      }).catch(err2 => {
+        console.error('Scanner error with fallback:', err2);
+        
+        // Final fallback: let browser choose camera
+        html5QrcodeScanner.start(
+          { facingMode: "user" },
+          config,
+          onScanSuccess,
+          onScanFailure
+        ).then(() => {
+          status.textContent = 'Point camera at QR code (front camera)';
+          status.style.color = 'var(--success)';
+        }).catch(err3 => {
+          status.textContent = 'Camera access denied or not available';
+          status.style.color = 'var(--danger)';
+          console.error('All scanner attempts failed:', err3);
+          
+          // Show manual input after error
+          setTimeout(() => {
+            cameraView.style.display = 'none';
+            manualView.style.display = 'block';
+            document.getElementById('toggleScannerText').textContent = 'Use camera instead';
+          }, 2000);
+        });
+      });
+    });
+  }
+
+  function toggleScannerView() {
+    const cameraView = document.getElementById('scannerCameraView');
+    const manualView = document.getElementById('scannerManualView');
+    const toggleText = document.getElementById('toggleScannerText');
+    
+    if (cameraView.style.display === 'none') {
+      // Switch to camera view
+      cameraView.style.display = 'block';
+      manualView.style.display = 'none';
+      toggleText.textContent = "Can't scan? Enter link manually";
+      
+      // Try to init camera again
+      if (!html5QrcodeScanner) {
+        initScanner();
+      }
+    } else {
+      // Switch to manual view
+      cameraView.style.display = 'none';
+      manualView.style.display = 'block';
+      toggleText.textContent = 'Use camera instead';
+      
+      // Stop camera if running
+      if (html5QrcodeScanner) {
+        html5QrcodeScanner.stop().then(() => {
+          html5QrcodeScanner.clear();
+          html5QrcodeScanner = null;
+        }).catch(err => {
+          console.log('Error stopping scanner:', err);
+        });
+      }
+    }
+  }
+
+  function connectFromManualInput() {
+    const input = document.getElementById('manualP2PUrl');
+    const text = input.value.trim();
+    
+    if (!text) {
+      alert('Please enter a connection code or link');
+      return;
+    }
+    
+    closeScanner();
+    handleConnectionInput(text);
+  }
+
+  function onScanSuccess(decodedText, decodedResult) {
+    console.log('QR Code scanned:', decodedText);
+    console.log('Scan result:', decodedResult);
+    
+    // Store the scanned text
+    const scannedCode = decodedText;
+    
+    // Stop scanner first
+    if (html5QrcodeScanner) {
+      html5QrcodeScanner.stop().then(() => {
+        html5QrcodeScanner.clear();
+        html5QrcodeScanner = null;
+        
+        // Show connecting message in the scanner modal
+        const status = document.getElementById('scannerStatus');
+        status.textContent = 'QR code detected! Connecting...';
+        status.style.color = 'var(--success)';
+        
+        // Small delay to show the message, then process
+        setTimeout(() => {
+          // Parse the QR code - could be a full URL or just a peer ID
+          handleConnectionInput(scannedCode);
+        }, 500);
+      }).catch(err => {
+        console.error('Error stopping scanner:', err);
+        handleConnectionInput(scannedCode);
+      });
+    } else {
+      handleConnectionInput(scannedCode);
+    }
+  }
+
+  function handleConnectionInput(input) {
+    const text = input.trim();
+    
+    console.log('Processing connection input:', text);
+    
+    if (!text) {
+      alert('Empty input. Please try again.');
+      return;
+    }
+    
+    // Try to parse as URL first
+    try {
+      const url = new URL(text);
+      const receiveId = url.searchParams.get('receive');
+      
+      if (receiveId) {
+        console.log('Found receive ID in URL:', receiveId);
+        // Close scanner modal first
+        closeScanner();
+        setTimeout(() => {
+          connectToP2PSender(receiveId);
+        }, 300);
+        return;
+      }
+    } catch (err) {
+      // Not a URL, that's fine - might be a peer ID
+      console.log('Not a URL, checking if peer ID');
+    }
+    
+    // Check if it looks like a peer ID (starts with "fc-")
+    if (text.startsWith('fc-')) {
+      console.log('Valid peer ID format:', text);
+      // Close scanner modal first
+      closeScanner();
+      setTimeout(() => {
+        connectToP2PSender(text);
+      }, 300);
+      return;
+    }
+    
+    console.error('Invalid connection code:', text);
+    alert('Invalid connection code. Please check and try again.\n\nExpected format: fc-xxxxxxxx-xxxxxxxx');
+  }
+
+  function onScanFailure(error) {
+    // Ignore scan failures (happens continuously while scanning)
+    // Only log actual errors
+    if (error && error !== 'NotFoundException') {
+      console.warn('Scan failure:', error);
+    }
+  }
+
+  // Start
+  init();
+  
+  // Check for incoming P2P connection
+  checkForP2PReceive();
+  
+  // Register Service Worker for PWA
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(reg => {
+        console.log('Service Worker registered:', reg.scope);
+      })
+      .catch(err => {
+        console.log('Service Worker registration failed:', err);
+      });
+  }
+</script>
+
+</body>
+</html>
