@@ -3258,7 +3258,20 @@
       }
     });
     
-    const tagsToAdd = await showTagAddModal('Add Tags', 'Select existing tags or create new ones:', Array.from(existingTags).sort());
+    // Get selected cards
+    const selectedCards = deck.cards.filter(card => selectedCardIds.has(card.id));
+    
+    // Filter out tags that are already on ALL selected cards
+    const availableTags = Array.from(existingTags).filter(tag => {
+      // Check if this tag is on ALL selected cards
+      const tagOnAllCards = selectedCards.every(card => 
+        card.tags && card.tags.includes(tag)
+      );
+      // Only show tags that are NOT on all selected cards
+      return !tagOnAllCards;
+    }).sort();
+    
+    const tagsToAdd = await showTagAddModal('Add Tags', 'Select existing tags or create new ones:', availableTags);
     if (!tagsToAdd || tagsToAdd.length === 0) return;
     
     saveState();
@@ -3274,7 +3287,7 @@
     });
     
     save();
-    exitSelectionMode();
+    // Don't exit selection mode - let user continue or undo
     renderCards();
   }
 
