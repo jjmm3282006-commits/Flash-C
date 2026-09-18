@@ -1577,6 +1577,11 @@
     <h1>Flashcard Maker</h1>
   </div>
   <div class="header-right">
+    <button class="icon-btn" id="undoBtn" onclick="undo()" title="Undo (Ctrl+Z)">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
+      </svg>
+    </button>
     <button class="icon-btn" id="scanBtn" onclick="showScanner()">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
@@ -2039,6 +2044,64 @@
   let selectionMode = false;
   let selectedCardIds = new Set();
   
+  // Undo stack
+  let undoStack = [];
+  const MAX_UNDO_STACK = 50;
+  
+  function saveState() {
+    undoStack.push(JSON.stringify(decks));
+    if (undoStack.length > MAX_UNDO_STACK) {
+      undoStack.shift();
+    }
+  }
+  
+  function undo() {
+    if (undoStack.length === 0) {
+      showNotification('Nothing to undo', 'info');
+      return;
+    }
+    
+    const previousState = undoStack.pop();
+    decks = JSON.parse(previousState);
+    save();
+    
+    // Re-render based on current view
+    if (document.getElementById('decksView').classList.contains('active')) {
+      renderDecks();
+    } else if (document.getElementById('cardsView').classList.contains('active')) {
+      renderCards();
+    }
+    
+    showNotification('Undo successful', 'success');
+  }
+  
+  function showNotification(message, type = 'info') {
+    const notification = document.createElement('div');
+    notification.textContent = message;
+    notification.style.cssText = `
+      position: fixed;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--danger)' : 'var(--accent)'};
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      animation: fadeIn 0.2s;
+    `;
+    document.body.appendChild(notification);
+    
+    setTimeout(() => {
+      notification.style.opacity = '0';
+      notification.style.transition = 'opacity 0.3s';
+      setTimeout(() => notification.remove(), 300);
+    }, 2000);
+  }
+  
   // P2P State
   let peer = null;
   let currentConnection = null;
@@ -2105,6 +2168,7 @@
     const name = input.value.trim();
     if (!name) return;
 
+    saveState();
     decks.push({
       id: Date.now().toString(),
       name: name,
@@ -2122,6 +2186,7 @@
       'Delete Deck'
     );
     if (!confirmed) return;
+    saveState();
     decks = decks.filter(d => d.id !== id);
     save();
     renderDecks();
@@ -2139,6 +2204,7 @@
 
     if (!newName || !newName.trim()) return;
 
+    saveState();
     deck.name = newName.trim();
     save();
     renderDecks();
@@ -2213,6 +2279,7 @@
     const back = document.getElementById('cardBack').value.trim();
     if (!front || !back) return;
 
+    saveState();
     const deck = getCurrentDeck();
     deck.cards.push({
       id: Date.now().toString(),
@@ -2471,6 +2538,7 @@
       return;
     }
     
+    saveState();
     card.front = front;
     card.back = back;
     card.tags = [...editSelectedTags];
@@ -2487,6 +2555,7 @@
       'Delete Card'
     );
     if (!confirmed) return;
+    saveState();
     const deck = getCurrentDeck();
     deck.cards = deck.cards.filter(c => c.id !== cardId);
     save();
@@ -2929,6 +2998,7 @@
     );
     if (!confirmed) return;
     
+    saveState();
     // Remove cards that have ANY of the selected tags
     deck.cards = deck.cards.filter(card => {
       const cardTags = card.tags || [];
@@ -3097,6 +3167,7 @@
     if (!confirmed) return;
     const deck = getCurrentDeck();
     if (!deck) return;
+    saveState();
     deck.cards.forEach(card => card.learned = false);
     save();
     renderCards();
@@ -3190,6 +3261,7 @@
     const tagsToAdd = await showTagAddModal('Add Tags', 'Select existing tags or create new ones:', Array.from(existingTags).sort());
     if (!tagsToAdd || tagsToAdd.length === 0) return;
     
+    saveState();
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id)) {
         if (!card.tags) card.tags = [];
@@ -3228,6 +3300,7 @@
     const tagsToRemove = await showTagRemovalModal('Remove Tags', 'Select tags to remove from selected cards:', Array.from(tagsInSelection).sort());
     if (!tagsToRemove || tagsToRemove.length === 0) return;
     
+    saveState();
     // Remove all selected tags from all selected cards
     deck.cards.forEach(card => {
       if (selectedCardIds.has(card.id) && card.tags) {
@@ -3253,6 +3326,7 @@
     const deck = getCurrentDeck();
     if (!deck) return;
     
+    saveState();
     deck.cards = deck.cards.filter(card => !selectedCardIds.has(card.id));
     save();
     exitSelectionMode();
@@ -3615,12 +3689,20 @@
   // Custom Tag Removal Modal with search and live list
   function showTagRemovalModal(title, message, availableTags = []) {
     return new Promise((resolve) => {
+      // Ensure modal is fully closed before opening
       const modal = document.getElementById('inputModal');
+      modal.classList.remove('active');
+      
       const titleEl = document.getElementById('inputModalTitle');
       const messageEl = document.getElementById('inputModalMessage');
       const inputEl = document.getElementById('inputModalField');
       const cancelBtn = document.getElementById('inputModalCancelBtn');
       const okBtn = document.getElementById('inputModalOkBtn');
+      
+      // Reset button state
+      okBtn.disabled = true;
+      okBtn.style.opacity = '0.5';
+      okBtn.style.cursor = 'not-allowed';
       
       titleEl.textContent = title;
       messageEl.textContent = message;
@@ -3745,12 +3827,20 @@
   // Custom Tag Add Modal with search, live list, and new tag creation
   function showTagAddModal(title, message, availableTags = []) {
     return new Promise((resolve) => {
+      // Ensure modal is fully closed before opening
       const modal = document.getElementById('inputModal');
+      modal.classList.remove('active');
+      
       const titleEl = document.getElementById('inputModalTitle');
       const messageEl = document.getElementById('inputModalMessage');
       const inputEl = document.getElementById('inputModalField');
       const cancelBtn = document.getElementById('inputModalCancelBtn');
       const okBtn = document.getElementById('inputModalOkBtn');
+      
+      // Reset button state
+      okBtn.disabled = true;
+      okBtn.style.opacity = '0.5';
+      okBtn.style.cursor = 'not-allowed';
       
       titleEl.textContent = title;
       messageEl.textContent = message;
@@ -4060,8 +4150,9 @@
     enableTouchScroll(editTagTabsContainer);
   }
 
-  // Close modal on Escape key
+  // Close modal on Escape key and undo on Ctrl+Z
   document.addEventListener('keydown', function(e) {
+    // Handle Escape key for modals
     if (e.key === 'Escape') {
       const editModal = document.getElementById('editModal');
       const confirmModal = document.getElementById('confirmModal');
@@ -4083,6 +4174,16 @@
       } else if (editModal.classList.contains('active')) {
         closeEditModal();
       }
+    }
+    
+    // Handle Ctrl+Z for undo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'z') {
+      // Don't undo if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      e.preventDefault();
+      undo();
     }
   });
 
@@ -4395,6 +4496,7 @@
   function importReceivedDeck() {
     if (!receivedDeckData) return;
     
+    saveState();
     // Create a new deck with a unique ID
     const newDeck = {
       id: Date.now().toString(),
