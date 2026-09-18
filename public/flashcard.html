@@ -1582,6 +1582,11 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
       </svg>
     </button>
+    <button class="icon-btn" id="redoBtn" onclick="redo()" title="Redo (Ctrl+Y)">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 10H11a8 8 0 00-8 8v2M21 10l-6 6m6-6l-6-6"/>
+      </svg>
+    </button>
     <button class="icon-btn" id="scanBtn" onclick="showScanner()">
       <svg fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v1m6 11h2m-6 0h-2v4m0-11v3m0 0h.01M12 12h4.01M16 20h4M4 12h4m12 0h.01M5 8h2a1 1 0 001-1V5a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1zm12 0h2a1 1 0 001-1V5a1 1 0 00-1-1h-2a1 1 0 00-1 1v2a1 1 0 001 1zM5 20h2a1 1 0 001-1v-2a1 1 0 00-1-1H5a1 1 0 00-1 1v2a1 1 0 001 1z"/>
@@ -2044,8 +2049,9 @@
   let selectionMode = false;
   let selectedCardIds = new Set();
   
-  // Undo stack
+  // Undo/Redo stacks
   let undoStack = [];
+  let redoStack = [];
   const MAX_UNDO_STACK = 50;
   
   function saveState() {
@@ -2053,6 +2059,8 @@
     if (undoStack.length > MAX_UNDO_STACK) {
       undoStack.shift();
     }
+    // Clear redo stack when new action is performed
+    redoStack = [];
   }
   
   function undo() {
@@ -2060,6 +2068,9 @@
       showNotification('Nothing to undo', 'info');
       return;
     }
+    
+    // Save current state to redo stack
+    redoStack.push(JSON.stringify(decks));
     
     const previousState = undoStack.pop();
     decks = JSON.parse(previousState);
@@ -2073,6 +2084,29 @@
     }
     
     showNotification('Undo successful', 'success');
+  }
+  
+  function redo() {
+    if (redoStack.length === 0) {
+      showNotification('Nothing to redo', 'info');
+      return;
+    }
+    
+    // Save current state to undo stack
+    undoStack.push(JSON.stringify(decks));
+    
+    const nextState = redoStack.pop();
+    decks = JSON.parse(nextState);
+    save();
+    
+    // Re-render based on current view
+    if (document.getElementById('decksView').classList.contains('active')) {
+      renderDecks();
+    } else if (document.getElementById('cardsView').classList.contains('active')) {
+      renderCards();
+    }
+    
+    showNotification('Redo successful', 'success');
   }
   
   function showNotification(message, type = 'info') {
@@ -2155,8 +2189,9 @@
       showView('cardsView');
       renderCards();
     } else if (cardsView.classList.contains('active')) {
-      // Reset undo stack when exiting deck
+      // Reset undo/redo stacks when exiting deck
       undoStack = [];
+      redoStack = [];
       showView('decksView');
       currentDeckId = null;
       renderDecks();
@@ -4221,6 +4256,16 @@
       }
       e.preventDefault();
       undo();
+    }
+    
+    // Handle Ctrl+Y for redo
+    if ((e.ctrlKey || e.metaKey) && e.key === 'y') {
+      // Don't redo if user is typing in an input field
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') {
+        return;
+      }
+      e.preventDefault();
+      redo();
     }
   });
 
